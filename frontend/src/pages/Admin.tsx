@@ -1,159 +1,260 @@
-const stats = [
-  {
-    title: "Pending Approvals",
-    value: "7",
-    sub: "⚠ Needs review",
-    color: "text-violet-400",
-    bg: "bg-violet-500/10",
-  },
-  {
-    title: "Active Events",
-    value: "18",
-    sub: "↑ 3 this week",
-    color: "text-yellow-400",
-    bg: "bg-yellow-500/10",
-  },
-  {
-    title: "Total Users",
-    value: "3,241",
-    sub: "↑ 89 new",
-    color: "text-green-400",
-    bg: "bg-green-500/10",
-  },
-  {
-    title: "Support Tickets",
-    value: "12",
-    sub: "↓ 3 opened today",
-    color: "text-rose-400",
-    bg: "bg-rose-500/10",
-  },
-];
+import {
+  useEffect,
+  useMemo,
+} from "react";
+import { Link } from "react-router-dom";
 
-const approvals = [
-  {
-    event: "DJ Night Rooftop",
-    organizer: "K. Park",
-    requested: "2h ago",
-  },
-  {
-    event: "Yoga Retreat 2025",
-    organizer: "M. Gupta",
-    requested: "5h ago",
-  },
-  {
-    event: "Comedy Open Mic",
-    organizer: "T. Brown",
-    requested: "1d ago",
-  },
-  {
-    event: "Web3 Hackathon",
-    organizer: "A. Smith",
-    requested: "2d ago",
-  },
-];
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "../store/hooks";
 
-const users = [
-  {
-    name: "Sarah Chen",
-    role: "Organizer",
-    events: 12,
-    status: "Active",
-  },
-  {
-    name: "Tom Wilson",
-    role: "Attendee",
-    events: 3,
-    status: "Active",
-  },
-  {
-    name: "K. Park",
-    role: "Organizer",
-    events: 7,
-    status: "Pending",
-  },
-  {
-    name: "Priya Sharma",
-    role: "Attendee",
-    events: 8,
-    status: "Suspended",
-  },
-];
+import {
+  fetchEvents,
+  updateEventStatus,
+  deleteEvent,
+} from "../store/slices/eventSlice";
 
-const transactions = [
-  {
-    id: "#TXN-48291",
-    user: "Sarah Chen",
-    event: "TechSummit VIP",
-    amount: "$349",
-    method: "💳 Card",
-    date: "Jan 6",
-    status: "Success",
-  },
-  {
-    id: "#TXN-48290",
-    user: "Tom Wilson",
-    event: "Music Fest GA",
-    amount: "$89",
-    method: "🍎 Apple Pay",
-    date: "Jan 6",
-    status: "Success",
-  },
-  {
-    id: "#TXN-48289",
-    user: "Jamie R.",
-    event: "Startup Night",
-    amount: "$49",
-    method: "🅿️ PayPal",
-    date: "Jan 5",
-    status: "Pending",
-  },
-  {
-    id: "#TXN-48288",
-    user: "Marcus Lee",
-    event: "Design Workshop",
-    amount: "$75",
-    method: "💳 Card",
-    date: "Jan 4",
-    status: "Refunded",
-  },
-];
+import {
+  fetchUsers,
+  updateUserRole,
+} from "../store/slices/authSlice";
+
+import type {
+  Role,
+} from "../store/slices/authSlice";
+
+import {
+  fetchAllTickets,
+} from "../store/slices/ticketSlice";
+
+const formatDate =
+  (value?: string) => {
+
+    if (!value) {
+
+      return "-";
+    }
+
+    return new Date(value)
+      .toLocaleDateString(
+        "en-US",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }
+      );
+  };
 
 export default function AdminDashboard() {
-  const getStatusColor = (status: string) => {
+  const dispatch =
+    useAppDispatch();
+
+  const {
+    events,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useAppSelector(
+    (state) => state.events
+  );
+
+  const {
+    users,
+    user: currentUser,
+    loading: usersLoading,
+    error: usersError,
+  } = useAppSelector(
+    (state) => state.auth
+  );
+
+  const {
+    tickets,
+    loading: ticketsLoading,
+    error: ticketsError,
+  } = useAppSelector(
+    (state) => state.tickets
+  );
+
+  useEffect(() => {
+
+    dispatch(fetchEvents());
+    dispatch(fetchUsers());
+    dispatch(fetchAllTickets());
+
+  }, [dispatch]);
+
+  const pendingEvents =
+    useMemo(
+      () =>
+        events.filter(
+          (event) =>
+            event.status ===
+            "Pending"
+        ),
+      [events]
+    );
+
+  const activeEvents =
+    useMemo(
+      () =>
+        events.filter(
+          (event) =>
+            event.status === "Open"
+        ),
+      [events]
+    );
+
+  const totalRevenue =
+    useMemo(
+      () =>
+        tickets.reduce(
+          (total, ticket) =>
+            total +
+            ticket.price *
+              ticket.quantity,
+          0
+        ),
+      [tickets]
+    );
+
+  const stats = [
+    {
+      title: "Pending Approvals",
+      value:
+        pendingEvents.length,
+      sub: "Awaiting admin review",
+      color: "text-violet-400",
+      bg: "bg-violet-500/10",
+    },
+    {
+      title: "Live Events",
+      value:
+        activeEvents.length,
+      sub: "Published events",
+      color: "text-yellow-400",
+      bg: "bg-yellow-500/10",
+    },
+    {
+      title: "Total Users",
+      value: users.length,
+      sub: "Registered accounts",
+      color: "text-green-400",
+      bg: "bg-green-500/10",
+    },
+    {
+      title: "Ticket Revenue",
+      value:
+        `₹${totalRevenue}`,
+      sub: `${tickets.length} bookings`,
+      color: "text-rose-400",
+      bg: "bg-rose-500/10",
+    },
+  ];
+
+  const getStatusColor = (
+    status: string
+  ) => {
     switch (status) {
-      case "Success":
+      case "Open":
       case "Active":
+      case "Attended":
         return "bg-green-500/20 text-green-400";
 
       case "Pending":
+      case "Booked":
         return "bg-yellow-500/20 text-yellow-400";
 
-      case "Refunded":
-      case "Suspended":
+      case "Rejected":
+      case "Cancelled":
+      case "Not Arrived":
         return "bg-rose-500/20 text-rose-400";
+
+      case "Draft":
+        return "bg-white/10 text-gray-300";
 
       default:
         return "bg-white/10 text-white";
     }
   };
 
+  const handleEventStatus =
+    async (
+      eventId: string,
+      status:
+        | "Open"
+        | "Rejected"
+    ) => {
+
+      await dispatch(
+        updateEventStatus({
+          eventId,
+          status,
+        })
+      );
+    };
+
+  const handleRoleChange =
+    async (
+      userId: string,
+      role: Role
+    ) => {
+
+      await dispatch(
+        updateUserRole({
+          userId,
+          role,
+        })
+      );
+    };
+
+  const handleDeleteEvent =
+    async (eventId: string, title: string) => {
+
+      const confirmed = window.confirm(
+        `Delete "${title}"? This cannot be undone.`
+      );
+
+      if (!confirmed) return;
+
+      await dispatch(deleteEvent(eventId));
+    };
+
+  const loading =
+    eventsLoading ||
+    usersLoading ||
+    ticketsLoading;
+
+  const error =
+    eventsError ||
+    usersError ||
+    ticketsError;
+
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white">
           Admin Dashboard
         </h1>
 
         <p className="mt-2 text-gray-400">
-          Manage events, users, approvals,
-          and platform health
+          Approve events, manage users, and monitor bookings
         </p>
+        <Link
+          to="/analytics"
+          className="mt-3 inline-block text-sm text-violet-400 hover:text-violet-300"
+        >
+          View full analytics →
+        </Link>
       </div>
 
-      {/* Stats */}
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {error}
+        </div>
+      )}
+
       <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        
         {stats.map((stat) => (
           <div
             key={stat.title}
@@ -176,125 +277,173 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Tables */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* Approvals */}
+      <div className="grid gap-6 xl:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
-          
-          <h2 className="mb-5 text-2xl font-bold text-white">
-            ⏳ Pending Event Approvals
-          </h2>
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">
+              Pending Event Approvals
+            </h2>
+
+            {loading && (
+              <span className="text-sm text-gray-400">
+                Loading...
+              </span>
+            )}
+          </div>
 
           <div className="overflow-x-auto">
-            
             <table className="w-full">
-              
               <thead>
                 <tr className="border-b border-white/10 text-left text-sm text-gray-400">
-                  <th className="pb-4">Event</th>
-                  <th className="pb-4">Organizer</th>
-                  <th className="pb-4">Requested</th>
-                  <th className="pb-4">Action</th>
+                  <th className="pb-4">
+                    Event
+                  </th>
+                  <th className="pb-4">
+                    Date
+                  </th>
+                  <th className="pb-4">
+                    Status
+                  </th>
+                  <th className="pb-4">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {approvals.map((item) => (
-                  <tr
-                    key={item.event}
-                    className="border-b border-white/5"
-                  >
-                    <td className="py-4 text-white">
-                      {item.event}
-                    </td>
+                {pendingEvents.map(
+                  (event) => (
+                    <tr
+                      key={event._id}
+                      className="border-b border-white/5"
+                    >
+                      <td className="py-4 text-white">
+                        {event.title}
+                      </td>
 
-                    <td className="py-4 text-gray-300">
-                      {item.organizer}
-                    </td>
+                      <td className="py-4 text-gray-400">
+                        {formatDate(
+                          event.eventDateTime
+                        )}
+                      </td>
 
-                    <td className="py-4 text-gray-400">
-                      {item.requested}
-                    </td>
+                      <td className="py-4">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs ${getStatusColor(
+                            event.status
+                          )}`}
+                        >
+                          {event.status}
+                        </span>
+                      </td>
 
-                    <td className="py-4">
-                      
-                      <div className="flex gap-2">
-                        
-                        <button className="rounded-lg bg-green-500/20 px-3 py-2 text-green-400 transition-all hover:bg-green-500/30">
-                          ✓
-                        </button>
+                      <td className="py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              handleEventStatus(
+                                event._id || "",
+                                "Open"
+                              )
+                            }
+                            className="rounded-lg bg-green-500/20 px-3 py-2 text-sm text-green-400 transition-all hover:bg-green-500/30"
+                          >
+                            Approve
+                          </button>
 
-                        <button className="rounded-lg bg-rose-500/20 px-3 py-2 text-rose-400 transition-all hover:bg-rose-500/30">
-                          ✗
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button
+                            onClick={() =>
+                              handleEventStatus(
+                                event._id || "",
+                                "Rejected"
+                              )
+                            }
+                            className="rounded-lg bg-rose-500/20 px-3 py-2 text-sm text-rose-400 transition-all hover:bg-rose-500/30"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
+
+            {pendingEvents.length === 0 && (
+              <div className="py-10 text-center text-sm text-gray-400">
+                No events are waiting for approval.
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Users */}
         <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
-          
           <h2 className="mb-5 text-2xl font-bold text-white">
-            👥 User Management
+            User Role Management
           </h2>
 
           <div className="overflow-x-auto">
-            
             <table className="w-full">
-              
               <thead>
                 <tr className="border-b border-white/10 text-left text-sm text-gray-400">
-                  <th className="pb-4">User</th>
-                  <th className="pb-4">Role</th>
-                  <th className="pb-4">Events</th>
-                  <th className="pb-4">Status</th>
-                  <th className="pb-4">Action</th>
+                  <th className="pb-4">
+                    User
+                  </th>
+                  <th className="pb-4">
+                    Email
+                  </th>
+                  <th className="pb-4">
+                    Role
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {users.map((user) => (
                   <tr
-                    key={user.name}
+                    key={user._id}
                     className="border-b border-white/5"
                   >
                     <td className="py-4 font-medium text-white">
                       {user.name}
                     </td>
 
-                    <td className="py-4">
-                      
-                      <span className="rounded-full bg-violet-500/20 px-3 py-1 text-xs text-violet-400">
-                        {user.role}
-                      </span>
-                    </td>
-
-                    <td className="py-4 text-gray-300">
-                      {user.events}
+                    <td className="py-4 text-sm text-gray-400">
+                      {user.email}
                     </td>
 
                     <td className="py-4">
-                      
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs ${getStatusColor(
-                          user.status
-                        )}`}
+                      <select
+                        value={user.role}
+                        disabled={
+                          currentUser?._id ===
+                            user._id &&
+                          users.filter(
+                            (item) =>
+                              item.role ===
+                              "SuperAdmin"
+                          ).length <= 1
+                        }
+                        onChange={(event) =>
+                          handleRoleChange(
+                            user._id || "",
+                            event.target
+                              .value as Role
+                          )
+                        }
+                        className="rounded-xl border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-white outline-none"
                       >
-                        {user.status}
-                      </span>
-                    </td>
-
-                    <td className="py-4">
-                      
-                      <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 hover:bg-white/5">
-                        View
-                      </button>
+                        <option value="User">
+                          User
+                        </option>
+                        <option value="Admin">
+                          Admin
+                        </option>
+                        <option value="SuperAdmin">
+                          SuperAdmin
+                        </option>
+                      </select>
                     </td>
                   </tr>
                 ))}
@@ -304,81 +453,165 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Transactions */}
       <div className="mt-6 rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
-        
         <h2 className="mb-5 text-2xl font-bold text-white">
-          💳 Payment Transactions Monitor
+          Published Events
         </h2>
 
         <div className="overflow-x-auto">
-          
           <table className="w-full">
-            
             <thead>
               <tr className="border-b border-white/10 text-left text-sm text-gray-400">
-                <th className="pb-4">
-                  Transaction ID
-                </th>
-
-                <th className="pb-4">User</th>
-
                 <th className="pb-4">Event</th>
-
-                <th className="pb-4">Amount</th>
-
-                <th className="pb-4">Method</th>
-
                 <th className="pb-4">Date</th>
-
+                <th className="pb-4">Sold</th>
                 <th className="pb-4">Status</th>
+                <th className="pb-4">Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              {transactions.map((txn) => (
+              {activeEvents.map((event) => (
                 <tr
-                  key={txn.id}
+                  key={event._id}
                   className="border-b border-white/5"
                 >
-                  <td className="py-4 text-xs text-gray-500">
-                    {txn.id}
-                  </td>
-
                   <td className="py-4 text-white">
-                    {txn.user}
-                  </td>
-
-                  <td className="py-4 text-gray-300">
-                    {txn.event}
-                  </td>
-
-                  <td className="py-4 font-semibold text-green-400">
-                    {txn.amount}
-                  </td>
-
-                  <td className="py-4 text-gray-300">
-                    {txn.method}
+                    {event.title}
                   </td>
 
                   <td className="py-4 text-gray-400">
-                    {txn.date}
+                    {formatDate(event.eventDateTime)}
+                  </td>
+
+                  <td className="py-4 text-gray-400">
+                    {event.sold || 0} / {event.capacity || 0}
                   </td>
 
                   <td className="py-4">
-                    
                     <span
                       className={`rounded-full px-3 py-1 text-xs ${getStatusColor(
-                        txn.status
+                        event.status
                       )}`}
                     >
-                      {txn.status}
+                      {event.status}
+                    </span>
+                  </td>
+
+                  <td className="py-4">
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/events/${event._id}/edit`}
+                        className="rounded-lg bg-violet-500/20 px-3 py-2 text-sm text-violet-300 transition-all hover:bg-violet-500/30"
+                      >
+                        Edit
+                      </Link>
+
+                      <button
+                        onClick={() =>
+                          handleDeleteEvent(
+                            event._id || "",
+                            event.title
+                          )
+                        }
+                        className="rounded-lg bg-rose-500/20 px-3 py-2 text-sm text-rose-400 transition-all hover:bg-rose-500/30"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {activeEvents.length === 0 && (
+            <div className="py-10 text-center text-sm text-gray-400">
+              No published events yet.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
+        <h2 className="mb-5 text-2xl font-bold text-white">
+          Ticket Bookings
+        </h2>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/10 text-left text-sm text-gray-400">
+                <th className="pb-4">
+                  Ticket
+                </th>
+                <th className="pb-4">
+                  User
+                </th>
+                <th className="pb-4">
+                  Event
+                </th>
+                <th className="pb-4">
+                  Amount
+                </th>
+                <th className="pb-4">
+                  Attendance
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {tickets.map((ticket) => (
+                <tr
+                  key={ticket._id}
+                  className="border-b border-white/5"
+                >
+                  <td className="py-4 text-xs text-gray-500">
+                    {ticket.ticketId}
+                  </td>
+
+                  <td className="py-4">
+                    <p className="text-white">
+                      {ticket.userName ||
+                        "Unknown User"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {ticket.userEmail ||
+                        ticket.userId}
+                    </p>
+                  </td>
+
+                  <td className="py-4 text-gray-300">
+                    {ticket.eventName}
+                  </td>
+
+                  <td className="py-4 font-semibold text-green-400">
+                    ₹
+                    {ticket.price *
+                      ticket.quantity}
+                  </td>
+
+                  <td className="py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs ${getStatusColor(
+                        ticket.attendanceStatus ||
+                          "Booked"
+                      )}`}
+                    >
+                      {ticket.attendanceStatus ||
+                        "Booked"}
                     </span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {tickets.length === 0 && (
+            <div className="py-10 text-center text-sm text-gray-400">
+              No ticket bookings yet.
+            </div>
+          )}
         </div>
       </div>
     </div>

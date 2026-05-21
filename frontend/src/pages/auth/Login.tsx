@@ -1,72 +1,49 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-import { useAppDispatch } from "../../store/hooks";
-import { login } from "../../store/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { loginUser } from "../../store/slices/authSlice";
 
 export default function Login() {
   const [email, setEmail] = useState("");
 
   const [password, setPassword] =
     useState("");
+    
+    const navigate = useNavigate();
+    
+    const dispatch = useAppDispatch();
+    
+    const {
+      loading,
+      error,
+    } = useAppSelector(
+      (state) => state.auth
+    );
 
-  const [loading, setLoading] =
-    useState(false);
+const handleLogin = async (
+  e: React.FormEvent<HTMLFormElement>
+) => {
 
-  const navigate = useNavigate();
+  e.preventDefault();
 
-  const dispatch = useAppDispatch();
+  const result =
+    await dispatch(
+      loginUser({
+        email,
+        password,
+      })
+    );
 
-  const handleLogin = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
+  if (
+    loginUser.fulfilled.match(
+      result
+    )
+  ) {
 
-    setLoading(true);
-
-    setTimeout(() => {
-      if (
-        email ===
-          "admin@meetsphere.com" &&
-        password === "admin"
-      ) {
-        dispatch(
-          login({
-            token: "admin-token",
-            user: {
-              name: "Admin User",
-              email,
-              role: "Admin",
-            },
-          })
-        );
-
-        navigate("/");
-      } else if (
-        email ===
-          "user@meetsphere.com" &&
-        password === "user"
-      ) {
-        dispatch(
-          login({
-            token: "user-token",
-            user: {
-              name: "Client User",
-              email,
-              role: "User",
-            },
-          })
-        );
-
-        navigate("/");
-      } else {
-        alert("Invalid credentials");
-      }
-
-      setLoading(false);
-    }, 1000);
-  };
-
+    navigate("/");
+  }
+};
  return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0a16] px-6 text-white">
       
@@ -124,7 +101,6 @@ export default function Login() {
           className="space-y-5"
         >
           
-          {/* Email */}
           <div>
             <label className="mb-2 block text-sm text-gray-300">
               Email
@@ -178,24 +154,30 @@ export default function Login() {
               Forgot Password?
             </button>
           </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`flex w-full items-center justify-center rounded-2xl py-4 text-lg font-semibold text-white transition-all ${
-              loading
-                ? "cursor-not-allowed bg-gray-600"
-                : "bg-violet-600 hover:bg-violet-500"
-            }`}
-          >
-            {loading
-              ? "Signing in..."
-              : "Login"}
-          </button>
+{
+  error && (
+    <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+      {error}
+    </div>
+  )
+}
+     <button
+  type="submit"
+  disabled={loading}
+  className={`w-full rounded-2xl py-4 font-semibold transition-all ${
+    loading
+      ? "cursor-not-allowed bg-gray-600"
+      : "bg-violet-600 hover:bg-violet-500"
+  }`}
+>
+  {
+    loading
+      ? "Signing In..."
+      : "Login"
+  }
+</button>
         </form>
 
-        {/* Register */}
         <p className="mt-8 text-center text-sm text-gray-400">
           Don&apos;t have an account?{" "}
           
@@ -208,7 +190,7 @@ export default function Login() {
         </p>
 
         {/* Divider */}
-        <div className="my-8 flex items-center">
+        {/* <div className="my-8 flex items-center">
           
           <div className="h-px flex-1 bg-white/10"></div>
 
@@ -217,10 +199,10 @@ export default function Login() {
           </span>
 
           <div className="h-px flex-1 bg-white/10"></div>
-        </div>
+        </div> */}
 
         {/* Socials */}
-        <div className="flex justify-center gap-4">
+        {/* <div className="flex justify-center gap-4">
           
           <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
             🌐
@@ -233,7 +215,7 @@ export default function Login() {
           <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
             🟠
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

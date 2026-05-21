@@ -5,6 +5,7 @@ import eventReducer from "./slices/eventSlice";
 import ticketReducer from "./slices/ticketSlice";
 import registerReducer from "./slices/registerSlice"
 import attendeeReducer from "./slices/attendeeSlice"
+import scheduleReducer from "./slices/scheduleSlice"
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     tickets: ticketReducer,
     register: registerReducer,
     attendees: attendeeReducer,
+    schedules: scheduleReducer,
   },
 });
 

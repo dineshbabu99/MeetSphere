@@ -2,33 +2,8 @@ import { useState } from "react";
 
 import { useAppDispatch } from "../store/hooks";
 
-import { addEvent } from "../store/slices/eventSlice";
+import { createEvent } from "../store/slices/eventSlice";
 
-
-type TicketType = {
-  id: string;
-  name: string;
-  price: number;
-  capacity: number;
-};
-
-type EventType = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  date: string;
-  time: string;
-  capacity: string;
-  emoji: string;
-
-  tickets: TicketType[];
-
-  sold: number;
-
-  status: "Open" | "Draft";
-};
 
 export default function CreateEvent() {
   const dispatch = useAppDispatch();
@@ -39,17 +14,25 @@ const [eventData, setEventData] =
     description: "",
     category: "Technology",
     location: "",
-    date: "",
-    time: "",
+
+    eventDateTime: "",
+
+    bookingStart: "",
+
+    bookingEnd: "",
+
     capacity: "",
-    emoji: "💻",
+
+    image: "",
   });
+
   const [tickets, setTickets] = useState([
   {
     id: crypto.randomUUID(),
     name: "General Admission",
-    price: 49,
-    capacity: 200,
+    description: "",
+    price: 0,
+    capacity: 0,
   },
 ]);
   const handleChange = (
@@ -64,57 +47,95 @@ const [eventData, setEventData] =
   });
 };
 
-const publishEvent = () => {
-  if (!eventData.title) {
-    alert("Enter event title");
-    return;
-  }
+const publishEvent =
+  async () => {
 
-dispatch(
-  addEvent({
-    id: crypto.randomUUID(),
+    if (!eventData.title) {
 
-    ...eventData,
+      alert(
+        "Enter event title"
+      );
 
-    tickets,
+      return;
+    }
 
-    sold: 0,
+    const result =
+      await dispatch(
+      createEvent({
+  ...eventData,
 
-    status: "Open",
-  })
-);
+  capacity: Number(
+    eventData.capacity
+  ),
 
-  alert("Event Published 🚀");
+  tickets,
 
-  setEventData({
-    title: "",
-    description: "",
-    category: "Technology",
-    location: "",
-    date: "",
-    time: "",
-    capacity: "",
-    emoji: "💻",
-  });
+  sold: 0,
+
+  status: "Pending",
+})
+      );
+
+    if (
+      createEvent.fulfilled.match(
+        result
+      )
+    ) {
+
+      alert(
+        "Event sent for approval"
+      );
+
+      resetForm();
+    }
 };
-const saveDraft = () => {
 
-  dispatch(
-    addEvent({
-      id: crypto.randomUUID(),
+const saveDraft =
+  async () => {
 
-      ...eventData,
+    const result =
+      await dispatch(
+       createEvent({
+  ...eventData,
 
-      tickets,
+  capacity: Number(
+    eventData.capacity
+  ),
 
-      sold: 0,
+  tickets,
 
-      status: "Draft",
-    })
-  );
+  sold: 0,
 
-  alert("Draft Saved ✨");
+  status: "Draft",
+})
+      );
+
+    if (
+      createEvent.fulfilled.match(
+        result
+      )
+    ) {
+
+      alert(
+        "Draft Saved ✨"
+      );
+
+      resetForm();
+    }
 };
+
+
+const removeTicket =
+  (id: string) => {
+
+    setTickets((prev) =>
+      prev.filter(
+        (ticket) =>
+          ticket.id !== id
+      )
+    );
+};
+
 const updateTicket = (
   id: string,
   field: string,
@@ -138,11 +159,60 @@ const addTicketType = () => {
     {
       id: crypto.randomUUID(),
       name: "",
+      description: "",
       price: 0,
       capacity: 0,
     },
   ]);
 };
+
+
+const resetForm = () => {
+
+setEventData({
+  title: "",
+  description: "",
+  category: "Technology",
+  location: "",
+
+  eventDateTime: "",
+
+  bookingStart: "",
+
+  bookingEnd: "",
+
+  capacity: "",
+
+  image: "",
+});
+  setTickets([
+    {
+      id:
+        crypto.randomUUID(),
+
+      name:
+        "General Admission",
+
+      description: "",
+
+      price: 0,
+
+      capacity: 0,
+    },
+  ]);
+};
+
+const ticketPrices = (items: typeof tickets) =>
+  items
+    .map((ticket) => ticket.price)
+    .filter((price) => !Number.isNaN(price));
+
+const minTicketPrice = (items: typeof tickets) => {
+  const prices = ticketPrices(items);
+  return prices.length ? Math.min(...prices) : 0;
+};
+
+
   return (
     <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
       
@@ -224,35 +294,50 @@ const addTicketType = () => {
               </div>
 
               {/* Date */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-300">
-                  Start Date
-                </label>
+{/* Event Date & Time */}
+<div>
+  <label className="mb-2 block text-sm font-medium text-gray-300">
+    Event Date & Time
+  </label>
 
-                <input
-                  type="date"
-  name="date"
-  value={eventData.date}
-  onChange={handleChange}
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
-                />
-              </div>
+  <input
+    type="datetime-local"
+    name="eventDateTime"
+    value={eventData.eventDateTime}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+  />
+</div>
 
-              {/* Time */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-300">
-                  Start Time
-                </label>
+{/* Booking Start */}
+<div>
+  <label className="mb-2 block text-sm font-medium text-gray-300">
+    Booking Start
+  </label>
 
-                <input
-                 type="time"
-  name="time"
-  value={eventData.time}
-  onChange={handleChange}
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
-                />
-              </div>
+  <input
+    type="datetime-local"
+    name="bookingStart"
+    value={eventData.bookingStart}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+  />
+</div>
 
+{/* Booking End */}
+<div>
+  <label className="mb-2 block text-sm font-medium text-gray-300">
+    Booking End
+  </label>
+
+  <input
+    type="datetime-local"
+    name="bookingEnd"
+    value={eventData.bookingEnd}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+  />
+</div>
               {/* Capacity */}
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-300">
@@ -269,23 +354,24 @@ const addTicketType = () => {
               </div>
 
               {/* Emoji */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-300">
-                  Event Emoji
-                </label>
+           <div>
+  <label className="mb-2 block text-sm font-medium text-gray-300">
+    Event Poster
+  </label>
 
-                <select 
-                 name="emoji"
-  value={eventData.emoji}
-  onChange={handleChange}
-                className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none">
-                  <option>💻</option>
-                  <option>🎵</option>
-                  <option>🚀</option>
-                  <option>🎨</option>
-                  <option>⚽</option>
-                </select>
-              </div>
+ <input
+  type="url"
+  placeholder="Paste event poster URL"
+  value={eventData.image}
+  onChange={(e) =>
+    setEventData({
+      ...eventData,
+      image: e.target.value,
+    })
+  }
+  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+/>
+</div>
             </div>
           </div>
         </div>
@@ -296,13 +382,10 @@ const addTicketType = () => {
             <h2 className="text-2xl font-bold text-white">
               Ticket Types
             </h2>
-<button
-  onClick={addTicketType}
-  className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90"
->
-  + Add Ticket
-</button>
-            <button className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90">
+
+            <button 
+              onClick={addTicketType}
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90">
               + Add
             </button>
           </div>
@@ -316,7 +399,6 @@ const addTicketType = () => {
     >
       <div className="grid gap-4 md:grid-cols-3">
 
-        {/* Name */}
         <input
           type="text"
           placeholder="Ticket Name"
@@ -361,6 +443,29 @@ const addTicketType = () => {
           className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
         />
       </div>
+
+      <textarea
+        placeholder="Ticket description (e.g. VIP lounge access, early entry)"
+        value={ticket.description}
+        onChange={(e) =>
+          updateTicket(
+            ticket.id,
+            "description",
+            e.target.value
+          )
+        }
+        className="mt-3 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
+        rows={2}
+      />
+
+        <button
+  onClick={() =>
+    removeTicket(ticket.id)
+  }
+  className="mt-3 rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-400 transition-all hover:bg-red-500/30"
+>
+  Remove
+</button>
     </div>
   ))}
 </div>
@@ -379,9 +484,23 @@ const addTicketType = () => {
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-[var(--bg3)]">
 
             {/* Top */}
-            <div className="flex h-32 items-center justify-center bg-gradient-to-br from-violet-600 to-pink-500 text-6xl">
-            {eventData.emoji}
-            </div>
+         <div className="h-48 overflow-hidden">
+
+ {
+  eventData.image ? (
+    <img
+      src={eventData.image}
+      alt="Event Poster"
+      className="h-48 w-full rounded-xl object-cover"
+    />
+  )    : (
+
+      <div className="flex h-full items-center justify-center bg-gradient-to-br from-violet-600 to-pink-500 text-white">
+        No Poster
+      </div>
+)
+}
+</div>
 
             {/* Content */}
             <div className="p-5">
@@ -391,16 +510,22 @@ const addTicketType = () => {
 
               <p className="mt-2 text-sm text-gray-400">
                📍 {eventData.location || "Location"} · 📅{" "}
-{eventData.date || "Date"}
+{
+  eventData.eventDateTime
+    ? new Date(
+        eventData.eventDateTime
+      ).toLocaleString()
+    : "Date"
+}
               </p>
 
               <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-5">
                 <span className="text-lg font-bold text-[var(--accent)]">
-                  From $49
+                From ₹{minTicketPrice(tickets)}
                 </span>
 
-                <span className="rounded-full bg-green-500/20 px-3 py-1 text-sm text-green-400">
-                  Open
+                <span className="rounded-full bg-yellow-500/20 px-3 py-1 text-sm text-yellow-400">
+                  Pending Approval
                 </span>
               </div>
             </div>
@@ -424,35 +549,6 @@ const addTicketType = () => {
           </div>
         </div>
 
-        {/* Checklist */}
-        <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
-          <h2 className="mb-5 text-2xl font-bold text-white">
-            Publishing Checklist
-          </h2>
-
-          <div className="space-y-4 text-sm">
-
-            <div className="flex items-center gap-3 text-green-400">
-              ✅ Event title
-            </div>
-
-            <div className="flex items-center gap-3 text-green-400">
-              ✅ Date & time
-            </div>
-
-            <div className="flex items-center gap-3 text-gray-400">
-              ⬜ Description
-            </div>
-
-            <div className="flex items-center gap-3 text-gray-400">
-              ⬜ Ticket pricing
-            </div>
-
-            <div className="flex items-center gap-3 text-gray-400">
-              ⬜ Location set
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

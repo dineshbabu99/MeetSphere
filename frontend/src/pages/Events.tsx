@@ -1,128 +1,85 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TicketModal from "../components/TicketModal";
-import { useAppSelector } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { fetchEvents } from "../store/slices/eventSlice";
 
-const eventsData = [
-  {
-    id: 1,
-    title: "TechSummit 2025",
-    cat: "Technology",
-    date: "Jan 15",
-    loc: "San Francisco",
-    price: 149,
-    emoji: "💻",
-    color: "#1a0e3f,#2d1a6e",
-    badge: "Tech",
-    sold: 380,
-    cap: 500,
-  },
-  {
-    id: 2,
-    title: "Neon Music Festival",
-    cat: "Music",
-    date: "Jan 22",
-    loc: "Austin, TX",
-    price: 89,
-    emoji: "🎵",
-    color: "#3b0a24,#7a1a4b",
-    badge: "Music",
-    sold: 720,
-    cap: 1000,
-  },
-  {
-    id: 3,
-    title: "Startup Pitch Night",
-    cat: "Business",
-    date: "Feb 3",
-    loc: "New York",
-    price: 49,
-    emoji: "🚀",
-    color: "#1a1500,#3d3000",
-    badge: "Biz",
-    sold: 180,
-    cap: 300,
-  },
-  {
-    id: 4,
-    title: "AI Art Exhibition",
-    cat: "Art",
-    date: "Feb 14",
-    loc: "Chicago",
-    price: 25,
-    emoji: "🎨",
-    color: "#001a0e,#003d1a",
-    badge: "Art",
-    sold: 60,
-    cap: 200,
-  },
-  {
-    id: 5,
-    title: "Design Sprint Workshop",
-    cat: "Technology",
-    date: "Feb 20",
-    loc: "Seattle",
-    price: 199,
-    emoji: "✏️",
-    color: "#0e0a1a,#2d1a6e",
-    badge: "Design",
-    sold: 40,
-    cap: 60,
-  },
-  {
-    id: 6,
-    title: "City Run Marathon",
-    cat: "Sports",
-    date: "Mar 1",
-    loc: "Boston",
-    price: 35,
-    emoji: "🏃",
-    color: "#001a1a,#003d3d",
-    badge: "Sport",
-    sold: 890,
-    cap: 2000,
-  },
-];
+
 
 export default function Events() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
-const [open, setOpen] = useState(false);
-const [selectedEvent, setSelectedEvent] = useState("");
+  const [open, setOpen] = useState(false);
+const [selectedEvent,setSelectedEvent] = useState<any>(null);
 
-const events = useAppSelector(
-  (state) => state.events.events
-);
-const publishedEvents = events.filter(
-  (event) => event.status === "Open"
-);
-console.log(publishedEvents)
+  const events = useAppSelector(
+    (state) => state.events.events
+  );
+  const publishedEvents = events.filter(
+    (event) => event.status === "Open"
+  );
 
-  const filteredEvents = useMemo(() => {
-    return eventsData.filter((event) => {
-      const matchesSearch =
-        event.title.toLowerCase().includes(search.toLowerCase()) ||
-        event.loc.toLowerCase().includes(search.toLowerCase());
+const handleOpen = (
+  event: any
+) => {
+  setSelectedEvent(event);
 
-      const matchesCategory =
-        category === "" || event.cat === category;
+  setOpen(true);
+};
 
-      const matchesPrice =
-        price === ""
-          ? true
-          : price === "free"
-          ? event.price === 0
-          : price === "under50"
-          ? event.price < 50
-          : price === "50to150"
-          ? event.price >= 50 && event.price <= 150
-          : event.price > 150;
+ 
 
-      return matchesSearch && matchesCategory && matchesPrice;
-    });
-  }, [search, category, price]);
+  const filteredEvents =
+    useMemo(() => {
 
-  
+      return publishedEvents.filter(
+        (event) => {
+
+          const matchesSearch =
+            event.title
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              ) ||
+
+            event.location
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              );
+
+
+
+          const matchesCategory =
+            category === "" ||
+
+            event.category ===
+            category;
+
+
+
+          return (
+            matchesSearch &&
+            matchesCategory
+          );
+        }
+      );
+    }, [
+      publishedEvents,
+      search,
+      category,
+    ]);
+
+  const dispatch =
+    useAppDispatch();
+
+  useEffect(() => {
+
+    dispatch(fetchEvents());
+
+  }, []);
+
+  // console.log(events)
+
   return (
     <div>
       <div className="mb-8">
@@ -135,8 +92,8 @@ console.log(publishedEvents)
         </p>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-4">
-        
+      <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+
         {/* Search */}
         <input
           type="text"
@@ -167,42 +124,70 @@ console.log(publishedEvents)
           <option>Next 3 Months</option>
         </select>
 
-        <select
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="rounded-xl border border-[var(--border)] bg-[var(--bg2)] px-4 py-3 text-white outline-none"
-        >
-          <option value="">Any Price</option>
-          <option value="free">Free</option>
-          <option value="under50">Under $50</option>
-          <option value="50to150">$50–$150</option>
-          <option value="150plus">$150+</option>
-        </select>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {filteredEvents.map((event) => {
-          const progress = Math.round((event.sold / event.cap) * 100);
+          const now = new Date();
+
+const bookingStarted =
+  now >=
+  new Date(
+    event.bookingStart
+  );
+
+const bookingEnded =
+  now >
+  new Date(
+    event.bookingEnd
+  );
+
+const soldOut =
+  event.sold >=
+  event.capacity;
+
+const bookingStatus =
+  soldOut
+    ? "Sold Out"
+    : !bookingStarted
+    ? "Not Started"
+    : bookingEnded
+    ? "Booking Closed"
+    : "Open";
+          const progress = event.capacity > 0 ? Math.round((event.sold / event.capacity) * 100) : 0;
           return (
             <div
-              key={event.id}
+              key={event._id}
               className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg2)] transition-all hover:-translate-y-1 hover:border-[var(--accent)]"
             >
               {/* Thumbnail */}
               <div
-                className="relative flex h-52 items-center justify-center"
-                style={{
-                  background: `linear-gradient(135deg, ${event.color})`,
-                }}
+                className="relative h-52 overflow-hidden"
               >
-                <div className="text-7xl">
-                  {event.emoji}
-                </div>
+                <div className="absolute right-3 top-3">
 
-                <span className="absolute right-4 top-4 rounded-full bg-black/30 px-3 py-1 text-sm backdrop-blur">
-                  {event.badge}
-                </span>
+  <span
+    className={`rounded-full px-3 py-1 text-xs font-medium backdrop-blur ${
+      bookingStatus === "Open"
+        ? "bg-green-500/20 text-green-400"
+        : bookingStatus ===
+          "Sold Out"
+        ? "bg-red-500/20 text-red-400"
+        : "bg-yellow-500/20 text-yellow-400"
+    }`}
+  >
+    {bookingStatus}
+  </span>
+
+</div>
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="h-full w-full object-cover"
+                />
+                
               </div>
+              
 
               <div className="p-5">
                 <h3 className="text-xl font-semibold">
@@ -210,13 +195,35 @@ console.log(publishedEvents)
                 </h3>
 
                 <p className="mt-2 text-sm text-gray-400">
-                  📍 {event.loc}
+                  📍 {event.location}
                 </p>
+              <p className="mt-1 text-sm text-gray-400">
+  📅{" "}
+  {new Date(
+    event.eventDateTime
+  ).toLocaleDateString(
+    "en-US",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  )}
 
-                <p className="mt-1 text-sm text-gray-400">
-                  📅 {event.date}
-                </p>
+  {" · "}
 
+  ⏰{" "}
+  {new Date(
+    event.eventDateTime
+  ).toLocaleTimeString(
+    "en-US",
+    {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }
+  )}
+</p>
                 <div className="mt-5">
                   <div className="h-2 overflow-hidden rounded-full bg-[var(--bg3)]">
                     <div
@@ -229,22 +236,48 @@ console.log(publishedEvents)
                 {/* Footer */}
                 <div className="mt-5 flex items-center justify-between">
                   <span className="text-2xl font-bold text-[var(--accent)]">
-                    ${event.price}
+                    ₹
+                    {
+                      Math.min(
+                        ...event.tickets.map(
+                          (ticket) =>
+                            ticket.price
+                        )
+                      )
+                    }
                   </span>
 
                   <span className="text-sm text-gray-400">
-                    {event.cap - event.sold} left
+                    {/* {event.capacity - event.sold} left
+                    {" "} */}
+                    {event.sold}/{event.capacity} Sold
                   </span>
                 </div>
 
-           <button
-  onClick={() => {
-    setSelectedEvent(event.title);
-    setOpen(true);
-  }}
-  className="mt-5 w-full rounded-xl bg-[var(--accent)] py-3 font-semibold text-white transition-all hover:opacity-90"
+<button
+  onClick={() =>
+    handleOpen(event)
+  }
+  disabled={
+    soldOut ||
+    !bookingStarted ||
+    bookingEnded
+  }
+  className={`mt-5 w-full rounded-xl py-3 font-semibold text-white transition-all ${
+    soldOut ||
+    !bookingStarted ||
+    bookingEnded
+      ? "cursor-not-allowed bg-gray-600"
+      : "bg-[var(--accent)] hover:opacity-90"
+  }`}
 >
-  Get Ticket
+  {soldOut
+    ? "Sold Out"
+    : !bookingStarted
+    ? "Booking Not Started"
+    : bookingEnded
+    ? "Booking Closed"
+    : "Get Ticket"}
 </button>
               </div>
             </div>
@@ -257,12 +290,16 @@ console.log(publishedEvents)
           No events found.
         </div>
       )}
-      <TicketModal
-  open={open}
-  onClose={() => setOpen(false)}
-  eventName={selectedEvent}
-/>
+    {open && selectedEvent && (
+  <TicketModal
+    open={open}
+    onClose={() =>
+      setOpen(false)
+    }
+    event={selectedEvent}
+  />
+)}
     </div>
-    
+
   );
 }

@@ -1,39 +1,447 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+} from "@reduxjs/toolkit";
 
-type EventItem = Record<string, unknown>;
+import axios from "axios";
+
+
+
+export type TicketType = {
+  _id?: string;
+  id?: string;
+
+  name: string;
+
+  description?: string;
+
+  price: number;
+
+  capacity: number;
+
+  sold?: number;
+};
+
+
+
+export type EventItem = {
+  _id?: string;
+
+  title: string;
+
+  description: string;
+
+  category: string;
+
+  location: string;
+
+  eventDateTime: string;
+
+  bookingStart: string;
+
+  bookingEnd: string;
+
+  image: string;
+
+  capacity: number;
+
+  sold: number;
+
+  status:
+    | "Open"
+    | "Pending"
+    | "Rejected"
+    | "Draft";
+
+  tickets: TicketType[];
+};
 
 type EventState = {
   events: EventItem[];
+
+  loading: boolean;
+
+  error: string | null;
 };
+
+
 
 const initialState: EventState = {
   events: [],
+
+  loading: false,
+
+  error: null,
 };
 
-const eventSlice = createSlice({
-  name: "events",
 
-  initialState,
 
-  reducers: {
-    setEvents: (
-      state,
-      action: PayloadAction<EventItem[]>
+// FETCH EVENTS
+export const fetchEvents =
+  createAsyncThunk(
+    "events/fetchEvents",
+
+    async (_, thunkAPI) => {
+
+      try {
+
+        const response =
+          await axios.get(
+            "http://localhost:5000/api/events"
+          );
+
+        return response.data;
+
+      } catch (error: any) {
+
+        return thunkAPI.rejectWithValue(
+          error.response?.data
+            ?.message ||
+            "Failed to fetch events"
+        );
+      }
+    }
+  );
+
+
+
+// CREATE EVENT
+export const createEvent =
+  createAsyncThunk(
+    "events/createEvent",
+
+    async (
+      eventData: EventItem,
+      thunkAPI
     ) => {
-      state.events = action.payload;
-    },
 
-    addEvent: (
-      state,
-      action: PayloadAction<EventItem>
+      try {
+
+        const response =
+          await axios.post(
+            "http://localhost:5000/api/events/create",
+
+            eventData
+          );
+
+        return response.data.event;
+
+      } catch (error: any) {
+
+        return thunkAPI.rejectWithValue(
+          error.response?.data
+            ?.message ||
+            "Failed to create event"
+        );
+      }
+    }
+  );
+
+export const updateEvent =
+  createAsyncThunk(
+    "events/updateEvent",
+
+    async (
+      payload: {
+        eventId: string;
+        eventData: Partial<EventItem>;
+      },
+      thunkAPI
     ) => {
-      state.events.push(action.payload);
+
+      const state =
+        thunkAPI.getState() as {
+          auth: {
+            token: string | null;
+          };
+        };
+
+      try {
+
+        const response =
+          await axios.put(
+            `http://localhost:5000/api/events/${payload.eventId}`,
+            payload.eventData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${state.auth.token}`,
+              },
+            }
+          );
+
+        return response.data.event;
+
+      } catch (error: any) {
+
+        return thunkAPI.rejectWithValue(
+          error.response?.data
+            ?.message ||
+            "Failed to update event"
+        );
+      }
+    }
+  );
+
+export const deleteEvent =
+  createAsyncThunk(
+    "events/deleteEvent",
+
+    async (eventId: string, thunkAPI) => {
+
+      const state =
+        thunkAPI.getState() as {
+          auth: {
+            token: string | null;
+          };
+        };
+
+      try {
+
+        await axios.delete(
+          `http://localhost:5000/api/events/${eventId}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${state.auth.token}`,
+            },
+          }
+        );
+
+        return eventId;
+
+      } catch (error: any) {
+
+        return thunkAPI.rejectWithValue(
+          error.response?.data
+            ?.message ||
+            "Failed to delete event"
+        );
+      }
+    }
+  );
+
+export const updateEventStatus =
+  createAsyncThunk(
+    "events/updateEventStatus",
+
+    async (
+      payload: {
+        eventId: string;
+        status:
+          | "Open"
+          | "Pending"
+          | "Rejected"
+          | "Draft";
+      },
+      thunkAPI
+    ) => {
+
+      const state =
+        thunkAPI.getState() as {
+          auth: {
+            token: string | null;
+          };
+        };
+
+      try {
+
+        const response =
+          await axios.patch(
+            `http://localhost:5000/api/events/${payload.eventId}/status`,
+            {
+              status:
+                payload.status,
+            },
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${state.auth.token}`,
+              },
+            }
+          );
+
+        return response.data.event;
+
+      } catch (error: any) {
+
+        return thunkAPI.rejectWithValue(
+          error.response?.data
+            ?.message ||
+            "Failed to update event status"
+        );
+      }
+    }
+  );
+
+
+
+const eventSlice =
+  createSlice({
+    name: "events",
+
+    initialState,
+
+    reducers: {},
+
+    extraReducers: (
+      builder
+    ) => {
+
+      builder
+
+        // FETCH EVENTS
+        .addCase(
+          fetchEvents.pending,
+          (state) => {
+
+            state.loading = true;
+
+            state.error = null;
+          }
+        )
+
+        .addCase(
+          fetchEvents.fulfilled,
+          (
+            state,
+            action
+          ) => {
+
+            state.loading = false;
+
+            state.events =
+              action.payload;
+          }
+        )
+
+        .addCase(
+          fetchEvents.rejected,
+          (
+            state,
+            action
+          ) => {
+
+            state.loading = false;
+
+            state.error =
+              action.payload as string;
+          }
+        )
+
+
+
+        // CREATE EVENT
+        .addCase(
+          createEvent.pending,
+          (state) => {
+
+            state.loading = true;
+
+            state.error = null;
+          }
+        )
+
+        .addCase(
+          createEvent.fulfilled,
+          (
+            state,
+            action
+          ) => {
+
+            state.loading = false;
+
+            state.events.push(
+              action.payload
+            );
+          }
+        )
+
+        .addCase(
+          createEvent.rejected,
+          (
+            state,
+            action
+          ) => {
+
+            state.loading = false;
+
+            state.error =
+              action.payload as string;
+          }
+        )
+
+        .addCase(
+          updateEventStatus.fulfilled,
+          (state, action) => {
+
+            state.events =
+              state.events.map(
+                (event) =>
+                  event._id ===
+                  action.payload._id
+                    ? action.payload
+                    : event
+              );
+          }
+        )
+
+        .addCase(
+          updateEventStatus.rejected,
+          (state, action) => {
+
+            state.error =
+              action.payload as string;
+          }
+        )
+
+        .addCase(
+          updateEvent.fulfilled,
+          (state, action) => {
+
+            state.events =
+              state.events.map(
+                (event) =>
+                  event._id ===
+                  action.payload._id
+                    ? action.payload
+                    : event
+              );
+          }
+        )
+
+        .addCase(
+          updateEvent.rejected,
+          (state, action) => {
+
+            state.error =
+              action.payload as string;
+          }
+        )
+
+        .addCase(
+          deleteEvent.fulfilled,
+          (state, action) => {
+
+            state.events =
+              state.events.filter(
+                (event) =>
+                  event._id !==
+                  action.payload
+              );
+          }
+        )
+
+        .addCase(
+          deleteEvent.rejected,
+          (state, action) => {
+
+            state.error =
+              action.payload as string;
+          }
+        );
     },
-  },
-});
+  });
 
-export const { setEvents, addEvent } =
-  eventSlice.actions;
-
-export default eventSlice.reducer;
+export default
+eventSlice.reducer;

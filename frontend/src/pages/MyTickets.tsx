@@ -1,3 +1,10 @@
+
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { cancelTicket, fetchTickets } from "../store/slices/ticketSlice";
+import { fetchEvents } from "../store/slices/eventSlice";
+
+
 const tickets = [
   {
     id: 1,
@@ -47,64 +54,204 @@ const tickets = [
   },
 ];
 
+void tickets;
+
+const  user = {
+  userInfo: JSON.parse(
+    localStorage.getItem("user") ||
+      "[]"
+  ),
+};
+
+
+
 export default function MyTickets() {
+    const dispatch =
+      useAppDispatch();
+
+
+useEffect(() => {
+
+  dispatch(
+    fetchTickets(user?.userInfo._id)
+  );
+
+  dispatch(
+    fetchEvents()
+  );
+
+}, [dispatch]);
+    
+  const tickets = useAppSelector(
+    (state) => state.tickets.tickets
+  );
+  
+  const events = useAppSelector(
+  (state) => state.events.events
+);
+
+const handleCancel =
+  async (
+    ticketId: string
+  ) => {
+
+    const confirmCancel =
+      window.confirm(
+        "Cancel this ticket?"
+      );
+
+    if (!confirmCancel)
+      return;
+
+    try {
+
+      await dispatch(
+        cancelTicket(
+          ticketId
+        )
+      ).unwrap();
+
+      await dispatch(
+        fetchEvents()
+      );
+
+      alert(
+        "Ticket cancelled successfully"
+      );
+
+    } catch (error: any) {
+
+      alert(
+        error.message
+      );
+    }
+};
+  
+
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white">
-          My Tickets
-        </h1>
+  <div>
+    {/* Header */}
+    <div className="mb-8">
+      <h1 className="text-4xl font-bold text-white">
+        My Tickets
+      </h1>
 
-        <p className="mt-2 text-gray-400">
-          Manage your event registrations and tickets
-        </p>
-      </div>
+      <p className="mt-2 text-gray-400">
+        Manage your event registrations and tickets
+      </p>
+    </div>
 
-      {/* Grid */}
-      <div className="grid gap-6 md:grid-cols-3 xl:grid-cols-3">
+    {/* Grid */}
+    <div className="grid gap-6 md:grid-cols-3 xl:grid-cols-3">
 
-        {tickets.map((ticket) => (
+      {tickets.map((ticket) => {
+
+        const event = events.find(
+          (event: any) =>
+            event._id === ticket.eventId
+        );
+
+const eventDate =
+  event?.eventDateTime
+    ? new Date(
+        event.eventDateTime
+      )
+    : new Date();
+const currentDate =
+  new Date();
+
+const isPast =
+  eventDate < currentDate;
+
+const isToday =
+  eventDate.toDateString() ===
+  currentDate.toDateString();
+
+const status =
+  isPast
+    ? "Past Event"
+    : isToday
+    ? "Confirmed"
+    : "Upcoming";
+
+       
+        return (
           <div
-            key={ticket.id}
-            className={`overflow-hidden rounded-2xl border border-white/10 bg-[var(--bg2)] transition-all hover:-translate-y-1 hover:border-[var(--accent)] ${ticket.opacity}`}
+            key={ticket._id}
+            className="overflow-hidden rounded-2xl border border-white/10 bg-[var(--bg2)] transition-all hover:-translate-y-1 hover:border-[var(--accent)]"
           >
+
             {/* Top */}
-            <div
-              className={`relative flex h-52 items-center justify-center bg-gradient-to-br ${ticket.gradient}`}
-            >
-              <div className="text-7xl">
-                {ticket.emoji}
-              </div>
+            <div className="relative h-52 overflow-hidden">
+
+              <img
+               src={
+  event?.image ||
+  "https://placehold.co/600x400"
+}
+                alt={ticket.eventName}
+                className="h-full w-full object-cover"
+              />
 
               <span className="absolute right-4 top-4 rounded-full bg-black/30 px-3 py-1 text-sm text-white backdrop-blur">
-                {ticket.type}
+                {ticket.ticketType}
               </span>
             </div>
 
             {/* Body */}
             <div className="p-5">
-              
+
               <h2 className="text-2xl font-bold text-white">
-                {ticket.title}
+                {ticket.eventName}
               </h2>
 
               <p className="mt-3 text-sm text-gray-400">
-                📍 {ticket.location}
+                📍 {event?.location}
               </p>
 
-              <p className="mt-1 text-sm text-gray-400">
-                📅 {ticket.date}
-              </p>
+        <p className="mt-1 text-sm text-gray-400">
+  📅{" "}
+  {event?.eventDateTime
+    ? new Date(
+        event.eventDateTime
+      ).toLocaleDateString(
+        "en-US",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }
+      )
+    : "No Date"}
 
-              <p className="mt-3 text-sm font-medium text-[var(--accent)]">
-                🎟️ {ticket.ticket}
-              </p>
+  {" · "}
+
+  ⏰{" "}
+  {event?.eventDateTime
+    ? new Date(
+        event.eventDateTime
+      ).toLocaleTimeString(
+        "en-US",
+        {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }
+      )
+    : "No Time"}
+</p>
+<p className="mt-3 text-sm font-medium text-[var(--accent)]">
+  🎟️ {ticket.ticketId}
+</p>
+
+<p className="mt-1 text-sm text-gray-400">
+  Quantity: {ticket.quantity}
+</p>
 
               {/* Progress */}
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className={`h-full w-full ${ticket.progressColor}`}
+                  className={`h-full w-full bg-[var(--accent)]`}
                 />
               </div>
 
@@ -112,45 +259,54 @@ export default function MyTickets() {
               <div className="mt-5 flex items-center justify-between">
                 
                 {/* Status */}
-                <span
-                  className={`rounded-full px-3 py-1 text-sm font-medium ${ticket.statusColor}`}
-                >
-                  {ticket.status === "Confirmed" && "✓ "}
-                  {ticket.status === "Upcoming" && "⏳ "}
-                  {ticket.status === "Past Event" && "✗ "}
-                  {ticket.status}
-                </span>
+          <span
+  className={`rounded-full px-3 py-1 text-sm font-medium ${
+    status === "Confirmed"
+      ? "bg-green-500/20 text-green-400"
+      : status === "Upcoming"
+      ? "bg-yellow-500/20 text-yellow-400"
+      : "bg-red-500/20 text-red-400"
+  }`}
+>
+  {status === "Confirmed" && "✓ "}
+  {status === "Upcoming" && "⏳ "}
+  {status === "Past Event" && "✗ "}
+
+  {status}
+</span>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+              <div className="flex gap-2">
 
-                  <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 transition-all hover:bg-white/5">
-                    📧 Email
-                  </button>
+  <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 transition-all hover:bg-white/5">
+    📧 Email
+  </button>
 
-                  {ticket.status === "Confirmed" && (
-                    <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 transition-all hover:bg-white/5">
-                      Transfer
-                    </button>
-                  )}
+  {status === "Confirmed" && (
+    <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 transition-all hover:bg-white/5">
+      Transfer
+    </button>
+  )}
 
-                  {ticket.status === "Upcoming" && (
-                    <button className="rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-400 transition-all hover:bg-red-500/30">
-                      Cancel
-                    </button>
-                  )}
+  {status === "Upcoming" && (
+    <button onClick={()=>handleCancel(ticket._id!)} className="rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-400 transition-all hover:bg-red-500/30">
+      Cancel
+    </button>
+  )}
 
-                  {ticket.status === "Past Event" && (
-                    <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 transition-all hover:bg-white/5">
-                      ⭐ Rate
-                    </button>
-                  )}
-                </div>
+  {status === "Past Event" && (
+    <button className="rounded-lg border border-white/10 bg-[var(--bg3)] px-3 py-2 text-sm text-gray-300 transition-all hover:bg-white/5">
+      ⭐ Rate
+    </button>
+  )}
+
+</div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
-  );
+  </div>
+)
 }

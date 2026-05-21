@@ -1,79 +1,146 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+} from "@reduxjs/toolkit";
 
-export type Role = "Admin" | "User";
+import axios from "axios";
+
+export type Role =
+  | "Admin"
+  | "User";
 
 export type User = {
+  _id?: string;
+
   name: string;
+
   email: string;
-  password: string;
+
   role: Role;
+
+  token?: string;
 };
 
 type RegisterState = {
-  users: User[];
+  user: User | null;
+
+  loading: boolean;
+
+  error: string | null;
 };
 
 const initialState: RegisterState = {
-  users: JSON.parse(
-    localStorage.getItem("users") || "[]"
-  ),
+  user: null,
+
+  loading: false,
+
+  error: null,
 };
 
-const registerSlice = createSlice({
-  name: "register",
 
-  initialState,
 
-  reducers: {
-    registerUser: (
-      state,
-      action: PayloadAction<User>
+// REGISTER USER
+export const registerUser =
+  createAsyncThunk(
+    "register/registerUser",
+
+    async (
+      userData: {
+        name: string;
+        email: string;
+        password: string;
+      },
+
+      thunkAPI
     ) => {
-      const existingUser =
-        state.users.find(
-          (user) =>
-            user.email ===
-            action.payload.email
-        );
 
-      if (!existingUser) {
-        state.users.push(action.payload);
+      try {
 
-        localStorage.setItem(
-          "users",
-          JSON.stringify(state.users)
+        const response =
+          await axios.post(
+            "http://localhost:5000/api/auth/register",
+
+            userData
+          );
+
+        return response.data;
+
+      } catch (error: any) {
+
+        return thunkAPI.rejectWithValue(
+          error.response?.data
+            ?.message ||
+            "Registration failed"
         );
       }
+    }
+  );
+
+
+
+const registerSlice =
+  createSlice({
+    name: "register",
+
+    initialState,
+
+    reducers: {
+      clearError: (state) => {
+        state.error = null;
+      },
     },
 
-    removeUser: (
-      state,
-      action: PayloadAction<string>
+    extraReducers: (
+      builder
     ) => {
-      state.users = state.users.filter(
-        (user) =>
-          user.email !== action.payload
-      );
 
-      localStorage.setItem(
-        "users",
-        JSON.stringify(state.users)
-      );
+      builder
+
+        // PENDING
+        .addCase(
+          registerUser.pending,
+          (state) => {
+
+            state.loading = true;
+
+            state.error = null;
+          }
+        )
+
+        // SUCCESS
+        .addCase(
+          registerUser.fulfilled,
+          (
+            state,
+            action
+          ) => {
+
+            state.loading = false;
+
+            state.user =
+              action.payload;
+          }
+        )
+
+        // FAILED
+        .addCase(
+          registerUser.rejected,
+          (
+            state,
+            action
+          ) => {
+
+            state.loading = false;
+
+            state.error =
+              action.payload as string;
+          }
+        );
     },
-
-    clearUsers: (state) => {
-      state.users = [];
-
-      localStorage.removeItem("users");
-    },
-  },
-});
+  });
 
 export const {
-  registerUser,
-  removeUser,
-  clearUsers,
+  clearError,
 } = registerSlice.actions;
 
 export default registerSlice.reducer;

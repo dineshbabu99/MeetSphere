@@ -1,61 +1,357 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-const ticketTypes = [
-  {
-    id: "ga",
-    name: "General Admission",
-    desc: "Full day access · 180 left",
-    price: 149,
-    color: "bg-[var(--accent)]",
-    progress: "40%",
-  },
-  {
-    id: "vip",
-    name: "VIP All-Access",
-    desc: "VIP lounge + workshops · 12 left",
-    price: 349,
-    color: "bg-yellow-400",
-    progress: "76%",
-  },
-];
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "../store/hooks";
+
+import {
+  fetchEvents,
+} from "../store/slices/eventSlice";
+
+import {
+  purchaseTicket,
+} from "../store/slices/ticketSlice";
+
+const formatDateTime = (
+  value: string
+) => {
+
+  const date =
+    new Date(value);
+
+  return {
+    date:
+      date.toLocaleDateString(
+        "en-US",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }
+      ),
+    time:
+      date.toLocaleTimeString(
+        "en-US",
+        {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }
+      ),
+  };
+};
+
+const createTicketId = (
+  eventTitle: string,
+  ticketName: string
+) => {
+
+  const eventCode =
+    eventTitle
+      .replace(/\s+/g, "")
+      .substring(0, 5)
+      .toUpperCase();
+
+  const ticketCode =
+    ticketName
+      .replace(/\s+/g, "")
+      .substring(0, 3)
+      .toUpperCase();
+
+  const dateCode =
+    new Date()
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, "");
+
+  const randomCode =
+    Math.floor(
+      1000 + Math.random() * 9000
+    );
+
+  return `${eventCode}-${ticketCode}-${dateCode}-${randomCode}`;
+};
 
 export default function BuyTickets() {
-  const [qty, setQty] = useState({
-    ga: 0,
-    vip: 0,
-  });
+  const dispatch =
+    useAppDispatch();
 
-  const changeQty = (id: string, type: "inc" | "dec") => {
-    setQty((prev) => ({
-      ...prev,
-      [id]:
-        type === "inc"
-          ? prev[id as keyof typeof prev] + 1
-          : Math.max(prev[id as keyof typeof prev] - 1, 0),
-    }));
+  const user =
+    useAppSelector(
+      (state) => state.auth.user
+    );
+
+  const {
+    events,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useAppSelector(
+    (state) => state.events
+  );
+
+  const {
+    loading: ticketLoading,
+    error: ticketError,
+  } = useAppSelector(
+    (state) => state.tickets
+  );
+
+  const [
+    selectedEventId,
+    setSelectedEventId,
+  ] = useState("");
+
+  const [
+    qty,
+    setQty,
+  ] = useState<
+    Record<string, number>
+  >({});
+
+  useEffect(() => {
+
+    dispatch(fetchEvents());
+
+  }, [dispatch]);
+
+  const availableEvents =
+    useMemo(
+      () =>
+        events.filter(
+          (event) => {
+
+            const now =
+              new Date();
+
+            const bookingStarted =
+              now >=
+              new Date(
+                event.bookingStart
+              );
+
+            const bookingEnded =
+              now >
+              new Date(
+                event.bookingEnd
+              );
+
+            const soldOut =
+              event.sold >=
+              event.capacity;
+
+            return (
+              event.status === "Open" &&
+              bookingStarted &&
+              !bookingEnded &&
+              !soldOut
+            );
+          }
+        ),
+      [events]
+    );
+
+  useEffect(() => {
+
+    if (
+      availableEvents.length === 0
+    ) {
+
+      if (selectedEventId) {
+
+        setSelectedEventId("");
+        setQty({});
+      }
+
+      return;
+    }
+
+    const selectedEventExists =
+      availableEvents.some(
+        (event) =>
+          event._id ===
+          selectedEventId
+      );
+
+    if (selectedEventExists) {
+
+      return;
+    }
+
+    setSelectedEventId(
+      availableEvents[0]._id || ""
+    );
+    setQty({});
+
+  }, [
+    availableEvents,
+    selectedEventId,
+  ]);
+
+  const selectedEvent =
+    availableEvents.find(
+      (event) =>
+        event._id ===
+        selectedEventId
+    );
+
+  const selectedEventDate =
+    selectedEvent
+      ? formatDateTime(
+          selectedEvent.eventDateTime
+        )
+      : null;
+
+  const changeQty = (
+    id: string,
+    type: "inc" | "dec",
+    max: number
+  ) => {
+
+    setQty((prev) => {
+
+      const current =
+        prev[id] || 0;
+
+      return {
+        ...prev,
+        [id]:
+          type === "inc"
+            ? Math.min(
+                current + 1,
+                max
+              )
+            : Math.max(
+                current - 1,
+                0
+              ),
+      };
+    });
   };
 
-  const summary = useMemo(() => {
-    return ticketTypes
-      .map((ticket) => ({
-        ...ticket,
-        quantity: qty[ticket.id as keyof typeof qty],
-        total:
-          qty[ticket.id as keyof typeof qty] * ticket.price,
-      }))
-      .filter((ticket) => ticket.quantity > 0);
-  }, [qty]);
+  const summary =
+    useMemo(() => {
 
-  const totalPrice = useMemo(() => {
-    return summary.reduce(
-      (acc, item) => acc + item.total,
-      0
-    );
-  }, [summary]);
+      if (!selectedEvent) {
+
+        return [];
+      }
+
+      return selectedEvent.tickets
+        .map((ticket) => {
+
+          const id =
+            ticket._id ||
+            ticket.name;
+
+          const quantity =
+            qty[id] || 0;
+
+          return {
+            ...ticket,
+            id,
+            quantity,
+            total:
+              quantity *
+              ticket.price,
+          };
+        })
+        .filter(
+          (ticket) =>
+            ticket.quantity > 0
+        );
+    }, [qty, selectedEvent]);
+
+  const totalPrice =
+    useMemo(() => {
+
+      return summary.reduce(
+        (acc, item) =>
+          acc + item.total,
+        0
+      );
+    }, [summary]);
+
+  const resetQuantities = () => {
+
+    setQty({});
+  };
+
+  const completePurchase =
+    async () => {
+
+      if (
+        !selectedEvent ||
+        !user?._id ||
+        summary.length === 0
+      ) {
+
+        return;
+      }
+
+      const tickets =
+        summary.map(
+          (ticket) => ({
+            ticketId:
+              createTicketId(
+                selectedEvent.title,
+                ticket.name
+              ),
+            userId:
+              user._id || "",
+            eventId:
+              selectedEvent._id || "",
+            eventName:
+              selectedEvent.title,
+            ticketType:
+              ticket.name,
+            location:
+              selectedEvent.location,
+            date:
+              selectedEvent.eventDateTime,
+            price:
+              ticket.price,
+            quantity:
+              ticket.quantity,
+            purchaseDate:
+              new Date().toISOString(),
+          })
+        );
+
+      try {
+
+        const response =
+          await dispatch(
+            purchaseTicket(tickets)
+          ).unwrap();
+
+        await dispatch(
+          fetchEvents()
+        );
+
+        resetQuantities();
+
+        alert(
+          response.message ||
+            "Purchase confirmed!"
+        );
+
+      } catch (error: any) {
+
+        alert(
+          error?.message ||
+            String(error) ||
+            "Purchase failed"
+        );
+      }
+    };
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white">
           Buy Tickets
@@ -66,222 +362,395 @@ export default function BuyTickets() {
         </p>
       </div>
 
-      {/* Layout */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* LEFT */}
-        <div className="space-y-6">
-
-          {/* Event Card */}
-          <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
-            
-            <div className="mb-5 flex h-32 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-900 to-indigo-700 text-6xl">
-              💻
-            </div>
-
-            <h2 className="text-2xl font-bold text-white">
-              TechSummit 2025
-            </h2>
-
-            <p className="mt-3 text-sm text-gray-400">
-              📍 Moscone Center, San Francisco · 📅 Jan 15, 2025 · ⏰ 9:00 AM
-            </p>
-          </div>
-
-          {/* Tickets */}
-          <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
-            
-            <h2 className="mb-5 text-2xl font-bold text-white">
-              Select Tickets
-            </h2>
-
-            <div className="space-y-5">
-
-              {ticketTypes.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-[var(--bg3)] p-5"
-                >
-                  {/* LEFT */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {ticket.name}
-                    </h3>
-
-                    <p className="mt-1 text-sm text-gray-400">
-                      {ticket.desc}
-                    </p>
-
-                    {/* Progress */}
-                    <div className="mt-3 h-2 w-32 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className={`h-full rounded-full ${ticket.color}`}
-                        style={{
-                          width: ticket.progress,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* RIGHT */}
-                  <div className="text-right">
-                    
-                    <div className="text-2xl font-bold text-white">
-                      ${ticket.price}
-                    </div>
-
-                    {/* Quantity */}
-                    <div className="mt-3 flex items-center justify-end gap-3">
-
-                      <button
-                        onClick={() =>
-                          changeQty(ticket.id, "dec")
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bg4)] text-white transition-all hover:bg-white/10"
-                      >
-                        −
-                      </button>
-
-                      <span className="w-5 text-center font-semibold text-white">
-                        {
-                          qty[
-                            ticket.id as keyof typeof qty
-                          ]
-                        }
-                      </span>
-
-                      <button
-                        onClick={() =>
-                          changeQty(ticket.id, "inc")
-                        }
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-white transition-all hover:opacity-90 ${ticket.color}`}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      {(eventsError || ticketError) && (
+        <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {eventsError || ticketError}
         </div>
+      )}
 
-        {/* RIGHT */}
-        <div className="space-y-6">
-
-          {/* Summary */}
-          <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
-            
-            <h2 className="mb-5 text-2xl font-bold text-white">
-              Order Summary
+      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+        <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">
+              Events
             </h2>
 
-            {summary.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-gray-400">
-                Select tickets to continue
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {summary.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-xl bg-[var(--bg3)] p-4"
+            {eventsLoading && (
+              <span className="text-sm text-gray-400">
+                Loading...
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {availableEvents.map(
+              (event) => {
+                const dateTime =
+                  formatDateTime(
+                    event.eventDateTime
+                  );
+
+                return (
+                  <button
+                    key={event._id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedEventId(
+                        event._id || ""
+                      );
+                      resetQuantities();
+                    }}
+                    className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all hover:border-[var(--accent)] hover:bg-[var(--bg3)] ${
+                      selectedEventId ===
+                      event._id
+                        ? "border-[var(--accent)] bg-[var(--bg3)]"
+                        : "border-white/10"
+                    }`}
                   >
-                    <div>
-                      <h3 className="font-semibold text-white">
-                        {item.name}
+                    <div className="h-14 w-14 overflow-hidden rounded-xl bg-white/5">
+                      {event.image ? (
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[var(--accent)]">
+                          {event.title
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold text-white">
+                        {event.title}
                       </h3>
 
                       <p className="mt-1 text-sm text-gray-400">
-                        {item.quantity} × ${item.price}
+                        {dateTime.date} - {event.capacity - event.sold} left
                       </p>
                     </div>
-
-                    <div className="text-lg font-bold text-[var(--accent)]">
-                      ${item.total}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  </button>
+                );
+              }
             )}
 
-            {/* Total */}
-            <div className="my-5 border-t border-white/10"></div>
+            {!eventsLoading &&
+              availableEvents.length ===
+                0 && (
+                <div className="rounded-2xl border border-white/10 bg-[var(--bg3)] p-5 text-sm text-gray-400">
+                  No events are currently open for booking.
+                </div>
+              )}
+          </div>
+        </div>
 
-            <div className="flex items-center justify-between text-lg font-semibold">
-              <span>Total</span>
+        <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
+              {selectedEvent ? (
+                <>
+                  <div className="mb-5 h-56 overflow-hidden rounded-2xl bg-[var(--bg3)]">
+                    {selectedEvent.image ? (
+                      <img
+                        src={
+                          selectedEvent.image
+                        }
+                        alt={
+                          selectedEvent.title
+                        }
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-5xl font-bold text-[var(--accent)]">
+                        {selectedEvent.title
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                    )}
+                  </div>
 
-              <span className="text-[var(--accent)]">
-                ${totalPrice.toFixed(2)}
-              </span>
+                  <h2 className="text-2xl font-bold text-white">
+                    {selectedEvent.title}
+                  </h2>
+
+                  <p className="mt-3 text-sm text-gray-400">
+                    {selectedEvent.location} - {selectedEventDate?.date} - {selectedEventDate?.time}
+                  </p>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-[var(--bg3)] p-8 text-center text-gray-400">
+                  Select an event to view available tickets.
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
+              <h2 className="mb-5 text-2xl font-bold text-white">
+                Select Tickets
+              </h2>
+
+              <div className="space-y-5">
+                {selectedEvent?.tickets.map(
+                  (ticket) => {
+                    const id =
+                      ticket._id ||
+                      ticket.name;
+
+                    const sold =
+                      ticket.sold || 0;
+
+                    const remaining =
+                      Math.max(
+                        ticket.capacity -
+                          sold,
+                        0
+                      );
+
+                    const selected =
+                      qty[id] || 0;
+
+                    const progress =
+                      ticket.capacity > 0
+                        ? Math.round(
+                            (sold /
+                              ticket.capacity) *
+                              100
+                          )
+                        : 0;
+
+                    const soldOut =
+                      remaining === 0;
+
+                    return (
+                      <div
+                        key={id}
+                        className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[var(--bg3)] p-5 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">
+                            {ticket.name}
+                          </h3>
+
+                          <p className="mt-1 text-sm text-gray-400">
+                            {remaining} left
+                          </p>
+
+                          <div className="mt-3 h-2 w-36 overflow-hidden rounded-full bg-white/10">
+                            <div
+                              className="h-full rounded-full bg-[var(--accent)]"
+                              style={{
+                                width: `${progress}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="text-left sm:text-right">
+                          <div className="text-2xl font-bold text-white">
+                            {ticket.price ===
+                            0
+                              ? "Free"
+                              : `₹${ticket.price}`}
+                          </div>
+
+                          <div className="mt-3 flex items-center gap-3 sm:justify-end">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                changeQty(
+                                  id,
+                                  "dec",
+                                  remaining
+                                )
+                              }
+                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bg4)] text-white transition-all hover:bg-white/10"
+                            >
+                              -
+                            </button>
+
+                            <span className="w-5 text-center font-semibold text-white">
+                              {selected}
+                            </span>
+
+                            <button
+                              type="button"
+                              disabled={
+                                soldOut ||
+                                selected >=
+                                  remaining
+                              }
+                              onClick={() =>
+                                changeQty(
+                                  id,
+                                  "inc",
+                                  remaining
+                                )
+                              }
+                              className={`flex h-8 w-8 items-center justify-center rounded-lg text-white transition-all ${
+                                soldOut ||
+                                selected >=
+                                  remaining
+                                  ? "cursor-not-allowed bg-gray-600"
+                                  : "bg-[var(--accent)] hover:opacity-90"
+                              }`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+
+                {selectedEvent &&
+                  selectedEvent.tickets.length ===
+                    0 && (
+                    <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-gray-400">
+                      This event has no ticket types yet.
+                    </div>
+                  )}
+              </div>
             </div>
           </div>
 
-          {/* Payment */}
-          <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
-            
-            <h2 className="mb-5 text-2xl font-bold text-white">
-              Payment Details
-            </h2>
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
+              <h2 className="mb-5 text-2xl font-bold text-white">
+                Order Summary
+              </h2>
 
-            <div className="space-y-5">
+              {summary.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-gray-400">
+                  Select tickets to continue
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {summary.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between rounded-xl bg-[var(--bg3)] p-4"
+                    >
+                      <div>
+                        <h3 className="font-semibold text-white">
+                          {item.name}
+                        </h3>
 
-              <input
-                type="text"
-                placeholder="Cardholder Name"
-                className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)]"
-              />
+                        <p className="mt-1 text-sm text-gray-400">
+                          {item.quantity} x ₹{item.price}
+                        </p>
+                      </div>
 
-              <input
-                type="text"
-                placeholder="4242 4242 4242 4242"
-                className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)]"
-              />
+                      <div className="text-lg font-bold text-[var(--accent)]">
+                        ₹{item.total}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-4">
-                
+              <div className="my-5 border-t border-white/10"></div>
+
+              <div className="flex items-center justify-between text-lg font-semibold">
+                <span>Total</span>
+
+                <span className="text-[var(--accent)]">
+                  ₹{totalPrice.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
+              <h2 className="mb-5 text-2xl font-bold text-white">
+                Payment Details
+              </h2>
+
+              <div className="space-y-5">
                 <input
                   type="text"
-                  placeholder="MM/YY"
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                  placeholder="Cardholder Name"
+                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)]"
                 />
 
                 <input
-                  type="password"
-                  placeholder="CVV"
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                  type="text"
+                  placeholder="4242 4242 4242 4242"
+                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)]"
                 />
-              </div>
-           <div>
-                <label className="mb-3 block text-sm text-gray-300">
-                  Payment Method
-                </label>
 
-                <div className="grid grid-cols-3 gap-3">
-                  
-                  <button className="rounded-xl border-2 border-[var(--accent)] bg-[var(--bg3)] py-3 text-sm text-white">
-                    💳 Card
-                  </button>
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="MM/YY"
+                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                  />
 
-                  <button className="rounded-xl border border-white/10 bg-[var(--bg3)] py-3 text-sm text-gray-300 transition-all hover:bg-white/5">
-                    🍎 Pay
-                  </button>
-
-                  <button className="rounded-xl border border-white/10 bg-[var(--bg3)] py-3 text-sm text-gray-300 transition-all hover:bg-white/5">
-                    🅿️ PayPal
-                  </button>
+                  <input
+                    type="password"
+                    placeholder="CVV"
+                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                  />
                 </div>
+
+                <div>
+                  <label className="mb-3 block text-sm text-gray-300">
+                    Payment Method
+                  </label>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      className="rounded-xl border-2 border-[var(--accent)] bg-[var(--bg3)] py-3 text-sm text-white"
+                    >
+                      Card
+                    </button>
+
+                    <button
+                      type="button"
+                      className="rounded-xl border border-white/10 bg-[var(--bg3)] py-3 text-sm text-gray-300 transition-all hover:bg-white/5"
+                    >
+                      Apple Pay
+                    </button>
+
+                    <button
+                      type="button"
+                      className="rounded-xl border border-white/10 bg-[var(--bg3)] py-3 text-sm text-gray-300 transition-all hover:bg-white/5"
+                    >
+                      PayPal
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={completePurchase}
+                  disabled={
+                    totalPrice === 0 ||
+                    ticketLoading ||
+                    !user?._id
+                  }
+                  className={`w-full rounded-xl py-4 text-lg font-semibold text-white transition-all ${
+                    totalPrice === 0 ||
+                    ticketLoading ||
+                    !user?._id
+                      ? "cursor-not-allowed bg-gray-600"
+                      : "bg-[var(--accent)] hover:opacity-90"
+                  }`}
+                >
+                  {ticketLoading
+                    ? "Processing..."
+                    : "Complete Purchase"}
+                </button>
+
+                {!user?._id && (
+                  <p className="text-center text-sm text-gray-400">
+                    Login is required before purchasing tickets.
+                  </p>
+                )}
               </div>
-              <button
-                disabled={totalPrice === 0}
-                className={`w-full rounded-xl py-4 text-lg font-semibold text-white transition-all ${
-                  totalPrice === 0
-                    ? "cursor-not-allowed bg-gray-600"
-                    : "bg-[var(--accent)] hover:opacity-90"
-                }`}
-              >
-                🔒 Complete Purchase
-              </button>
             </div>
           </div>
         </div>
@@ -289,4 +758,3 @@ export default function BuyTickets() {
     </div>
   );
 }
-     

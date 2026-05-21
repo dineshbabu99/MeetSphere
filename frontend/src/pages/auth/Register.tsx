@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { registerUser } from "../../store/slices/registerSlice";
 
 
 
 export default function Register() {
-    const dispatch = useAppDispatch();
+const dispatch =
+  useAppDispatch();
 
+const {loading, error,} = useAppSelector((state) => state.register);
 
   const navigate = useNavigate();
 
@@ -19,8 +21,8 @@ export default function Register() {
       confirmPassword: "",
     });
 
-  const [loading, setLoading] =
-    useState(false);
+  // const [loading, setLoading] =
+  //   useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -31,9 +33,10 @@ export default function Register() {
     });
   };
 
-const handleRegister = (
+const handleRegister = async (
   e: React.FormEvent<HTMLFormElement>
 ) => {
+
   e.preventDefault();
 
   if (
@@ -41,36 +44,31 @@ const handleRegister = (
     formData.confirmPassword
   ) {
     alert("Passwords do not match");
+
     return;
   }
 
-  const users = JSON.parse(
-    localStorage.getItem("users") || "[]"
-  );
-
-  const existingUser = users.find(
-    (user: { email: string }) =>
-      user.email === formData.email
-  );
-
-  if (existingUser) {
-    alert("Email already registered");
-    return;
-  }
-
-  setLoading(true);
-
-  setTimeout(() => {
-    dispatch(
+  const result =
+    await dispatch(
       registerUser({
         name: formData.name,
+
         email: formData.email,
-        password: formData.password,
-        role: "User",
+
+        password:
+          formData.password,
       })
     );
 
-    alert("Account created successfully!");
+  if (
+    registerUser.fulfilled.match(
+      result
+    )
+  ) {
+
+    alert(
+      "Account created successfully!"
+    );
 
     setFormData({
       name: "",
@@ -80,10 +78,10 @@ const handleRegister = (
     });
 
     navigate("/login");
-
-    setLoading(false);
-  }, 1000);
+  }
 };
+
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0a16] px-6 text-white">
       
@@ -196,6 +194,15 @@ const handleRegister = (
             </span>
           </label>
 
+{
+  error && (
+    <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+      {error}
+    </div>
+  )
+}
+
+
           {/* Submit */}
           <button
             type="submit"
@@ -225,7 +232,7 @@ const handleRegister = (
         </p>
 
         {/* Divider */}
-        <div className="my-8 flex items-center">
+        {/* <div className="my-8 flex items-center">
           
           <div className="h-px flex-1 bg-white/10"></div>
 
@@ -234,10 +241,10 @@ const handleRegister = (
           </span>
 
           <div className="h-px flex-1 bg-white/10"></div>
-        </div>
+        </div> */}
 
         {/* Socials */}
-        <div className="flex justify-center gap-4">
+        {/* <div className="flex justify-center gap-4">
           
           <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
             🌐
@@ -250,7 +257,7 @@ const handleRegister = (
           <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
             🟠
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
