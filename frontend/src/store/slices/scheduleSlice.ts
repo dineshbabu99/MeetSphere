@@ -9,8 +9,7 @@ import type {
   EventItem,
 } from "./eventSlice";
 
-const API =
-  "http://localhost:5000/api/schedules";
+const API = import.meta.env.VITE_API_BASE_URL + "/schedules" || "http://localhost:5000/api/schedules";
 
 export type ScheduleSession = {
   _id?: string;

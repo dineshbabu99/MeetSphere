@@ -5,6 +5,8 @@ import {
 
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_BASE_URL + "/auth" || "http://localhost:5000/api/auth";
+
 export type Role =
   | "Admin"
   | "User";
@@ -58,7 +60,7 @@ export const registerUser =
 
         const response =
           await axios.post(
-            "http://localhost:5000/api/auth/register",
+            `${API}/register`,
 
             userData
           );

@@ -9,6 +9,7 @@ import type {
 
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_BASE_URL + "/tickets" || "http://localhost:5000/api/tickets";
 
 
 export type TicketItem = {
@@ -116,7 +117,7 @@ export const purchaseTicket =
 
         const response =
           await axios.post(
-            "http://localhost:5000/api/tickets/purchase",
+            `${API}/purchase`,
 
             ticketData
           );
@@ -153,7 +154,7 @@ export const fetchTickets =
 
         const response =
           await axios.get(
-            `http://localhost:5000/api/tickets/${userId}`
+            `${API}/${userId}`
           );
 
         return response.data;
@@ -184,7 +185,7 @@ export const cancelTicket =
 
         const response =
           await axios.delete(
-            `http://localhost:5000/api/tickets/${ticketId}`
+            `${API}/${ticketId}`
           );
 
         return {
@@ -222,7 +223,7 @@ export const fetchAllTickets =
 
         const response =
           await axios.get(
-            "http://localhost:5000/api/tickets/admin/all",
+            `${API}/admin/all`,
             {
               headers: {
                 Authorization:
@@ -270,7 +271,7 @@ export const updateTicketAttendance =
 
         const response =
           await axios.patch(
-            `http://localhost:5000/api/tickets/attendance/${payload.ticketId}`,
+            `${API}/attendance/${payload.ticketId}`,
             {
               attendanceStatus:
                 payload.attendanceStatus,

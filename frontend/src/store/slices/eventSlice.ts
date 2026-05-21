@@ -5,7 +5,7 @@ import {
 
 import axios from "axios";
 
-
+const API = import.meta.env.VITE_API_BASE_URL + "/events" || "http://localhost:5000/api/events";
 
 export type TicketType = {
   _id?: string;
@@ -87,7 +87,7 @@ export const fetchEvents =
 
         const response =
           await axios.get(
-            "http://localhost:5000/api/events"
+            `${API}`
           );
 
         return response.data;
@@ -119,7 +119,7 @@ export const createEvent =
 
         const response =
           await axios.post(
-            "http://localhost:5000/api/events/create",
+            `${API}/create`,
 
             eventData
           );
@@ -160,7 +160,7 @@ export const updateEvent =
 
         const response =
           await axios.put(
-            `http://localhost:5000/api/events/${payload.eventId}`,
+            `${API}/${payload.eventId}`,
             payload.eventData,
             {
               headers: {
@@ -199,7 +199,7 @@ export const deleteEvent =
       try {
 
         await axios.delete(
-          `http://localhost:5000/api/events/${eventId}`,
+          `${API}/${eventId}`,
           {
             headers: {
               Authorization:
@@ -248,7 +248,7 @@ export const updateEventStatus =
 
         const response =
           await axios.patch(
-            `http://localhost:5000/api/events/${payload.eventId}/status`,
+            `${API}/${payload.eventId}/status`,
             {
               status:
                 payload.status,

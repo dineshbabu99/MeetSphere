@@ -5,6 +5,9 @@ import {
 
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_BASE_URL + "/auth" || "http://localhost:5000/api/auth";
+
+
 export type Role =
   | "SuperAdmin"
   | "Admin"
@@ -69,7 +72,7 @@ export const loginUser =
 
         const response =
           await axios.post(
-            "http://localhost:5000/api/auth/login",
+            `${API}/login`,
 
             userData
           );
@@ -102,7 +105,7 @@ export const fetchCurrentUser =
 
         const response =
           await axios.get(
-            "http://localhost:5000/api/auth/me",
+            `${API}/me`,
             {
               headers: {
                 Authorization:
@@ -146,7 +149,7 @@ export const updateCurrentUser =
 
         const response =
           await axios.put(
-            "http://localhost:5000/api/auth/me",
+            `${API}/me`,
             userData,
             {
               headers: {
@@ -184,7 +187,7 @@ export const fetchUsers =
 
         const response =
           await axios.get(
-            "http://localhost:5000/api/auth/users",
+            `${API}/users`,
             {
               headers: {
                 Authorization:
@@ -227,7 +230,7 @@ export const updateUserRole =
 
         const response =
           await axios.patch(
-            `http://localhost:5000/api/auth/users/${payload.userId}/role`,
+            `${API}/users/${payload.userId}/role`,
             {
               role: payload.role,
             },
