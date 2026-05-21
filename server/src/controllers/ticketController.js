@@ -31,7 +31,6 @@ const purchaseTicket =
           });
       }
 
-      // Validate ticket availability
       for (const purchasedTicket of tickets) {
 
         const event =

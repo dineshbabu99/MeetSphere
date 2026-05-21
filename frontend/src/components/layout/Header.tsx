@@ -36,13 +36,11 @@ export default function Header() {
   return (
     <header className="flex h-20 flex-shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--bg2)] px-8">
 
-      {/* Title */}
       <h2 className="text-3xl font-bold text-white">
         {currentPage?.name ||
           "MeetSphere"}
       </h2>
 
-      {/* Right */}
       <div className="flex items-center gap-4">
 
         <button

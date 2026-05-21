@@ -10,7 +10,7 @@ import {
   getUpcomingOpenEvents,
   getUserUpcomingTickets,
   ticketAmount,
-} from "../lib/dashboardStats";
+} from "../data/dashboardStats";
 
 export default function UserDashboard() {
   const dispatch = useAppDispatch();

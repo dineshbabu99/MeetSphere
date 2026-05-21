@@ -1,13 +1,10 @@
+require("dotenv").config();
+
 const express =
   require("express");
 
 const cors =
   require("cors");
-
-const dotenv =
-  require("dotenv");
-
-
 
 const connectDB =
   require("./config/db");
@@ -26,11 +23,8 @@ const ticketRoutes =
 const scheduleRoutes =
   require("./routes/scheduleRoutes");
 
-
-
-dotenv.config();
-
-
+const paymentRoutes =
+  require("./routes/paymentRoutes");
 
 connectDB();
 
@@ -69,6 +63,11 @@ app.use(
 app.use(
   "/api/schedules",
   scheduleRoutes
+);
+
+app.use(
+  "/api/payments",
+  paymentRoutes
 );
 
 

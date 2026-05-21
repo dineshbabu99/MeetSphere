@@ -44,9 +44,9 @@ export const menuSections = [
         roles: adminRoles,
       },
       {
-        name: "Schedules",
+        name: "Manage Schedules",
         path: "/schedule",
-        icon: "🗓️",
+        icon: "📋",
         roles: adminRoles,
       },
     ],
@@ -66,6 +66,12 @@ export const menuSections = [
         name: "My Tickets",
         path: "/myTickets",
         icon: "🪪",
+        roles: allRoles,
+      },
+      {
+        name: "My Schedule",
+        path: "/my-schedule",
+        icon: "🗓️",
         roles: allRoles,
       },
       {

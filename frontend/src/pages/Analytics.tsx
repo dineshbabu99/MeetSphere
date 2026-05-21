@@ -23,7 +23,7 @@ import {
   buildTopEventsChart,
   formatRevenue,
   ticketAmount,
-} from "../lib/dashboardStats";
+} from "../data/dashboardStats";
 
 ChartJS.register(
   ArcElement,

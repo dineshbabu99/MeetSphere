@@ -13,7 +13,6 @@ export default function Sidebar() {
   return (
     <aside className="w-64 overflow-y-auto border-r border-[#1c1c35] bg-[#070714]">
       
-      {/* Logo */}
       <div className="border-b border-[#1c1c35] px-6 py-6">
         <h1 className="text-3xl font-bold text-violet-400">
           MeetSphere
@@ -39,12 +38,10 @@ export default function Sidebar() {
   return (
     <div key={section.title}>
 
-      {/* Section Title */}
       <p className="mb-4 px-3 text-xs font-bold uppercase tracking-[2px] text-violet-300/50">
         {section.title}
       </p>
 
-      {/* Menu */}
       <ul className="space-y-2">
 
         {filteredItems.map((item) => (
@@ -61,7 +58,6 @@ export default function Sidebar() {
                 }`
               }
             >
-              {/* Left */}
               <div className="flex items-center gap-3">
 
                 <span className="text-lg">
@@ -74,11 +70,11 @@ export default function Sidebar() {
               </div>
 
               {/* Badge */}
-              {item.badge && (
+              {/* {item.badge && (
                 <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-violet-500 px-2 text-xs font-bold text-white">
                   {item.badge}
                 </span>
-              )}
+              )} */}
             </NavLink>
           </li>
         ))}

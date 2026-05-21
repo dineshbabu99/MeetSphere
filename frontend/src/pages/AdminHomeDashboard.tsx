@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchEvents } from "../store/slices/eventSlice";
 import { fetchUsers } from "../store/slices/authSlice";
-import { formatDate } from "../lib/dashboardStats";
+import { formatDate } from "../data/dashboardStats";
 
 export default function AdminHomeDashboard() {
   const dispatch = useAppDispatch();

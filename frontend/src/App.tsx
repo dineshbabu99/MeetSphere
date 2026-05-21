@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
 import Schedule from "./pages/Schedules";
+import UserSchedule from "./pages/UserSchedule";
 import BuyTickets from "./pages/BuyTickets";
 import MyTickets from "./pages/MyTickets";
 import AttendeeManagement from "./pages/Attendees";
@@ -37,6 +38,7 @@ function App() {
             <Route path="/events" element={<Events />}/>
             <Route path="/buyTickets" element={<BuyTickets />}/>
             <Route path="/myTickets" element={<MyTickets />} />
+            <Route path="/my-schedule" element={<UserSchedule />} />
             <Route path="/user-details" element={<UserDetails />} />
 
             <Route element={ <RoleProtectedRoute allowedRoles={["SuperAdmin", "Admin"]}/>}>

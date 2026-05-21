@@ -13,9 +13,8 @@ import {
   fetchEvents,
 } from "../store/slices/eventSlice";
 
-import {
-  purchaseTicket,
-} from "../store/slices/ticketSlice";
+import { fetchTickets } from "../store/slices/ticketSlice";
+import { payWithRazorpay } from "../api/payWithRazorpay";
 
 const formatDateTime = (
   value: string
@@ -46,45 +45,12 @@ const formatDateTime = (
   };
 };
 
-const createTicketId = (
-  eventTitle: string,
-  ticketName: string
-) => {
-
-  const eventCode =
-    eventTitle
-      .replace(/\s+/g, "")
-      .substring(0, 5)
-      .toUpperCase();
-
-  const ticketCode =
-    ticketName
-      .replace(/\s+/g, "")
-      .substring(0, 3)
-      .toUpperCase();
-
-  const dateCode =
-    new Date()
-      .toISOString()
-      .slice(0, 10)
-      .replace(/-/g, "");
-
-  const randomCode =
-    Math.floor(
-      1000 + Math.random() * 9000
-    );
-
-  return `${eventCode}-${ticketCode}-${dateCode}-${randomCode}`;
-};
-
 export default function BuyTickets() {
   const dispatch =
     useAppDispatch();
 
-  const user =
-    useAppSelector(
-      (state) => state.auth.user
-    );
+  const user = useAppSelector((state) => state.auth.user);
+  const token = useAppSelector((state) => state.auth.token);
 
   const {
     events,
@@ -94,12 +60,7 @@ export default function BuyTickets() {
     (state) => state.events
   );
 
-  const {
-    loading: ticketLoading,
-    error: ticketError,
-  } = useAppSelector(
-    (state) => state.tickets
-  );
+  const { error: ticketError } = useAppSelector((state) => state.tickets);
 
   const [
     selectedEventId,
@@ -281,74 +242,45 @@ export default function BuyTickets() {
     setQty({});
   };
 
-  const completePurchase =
-    async () => {
+  const [paying, setPaying] = useState(false);
 
-      if (
-        !selectedEvent ||
-        !user?._id ||
-        summary.length === 0
-      ) {
+  const completePurchase = async () => {
+    if (!selectedEvent?._id || !user?._id || !token || summary.length === 0) {
+      return;
+    }
 
-        return;
+    const items = summary.map((ticket) => ({
+      ticketType: ticket.name,
+      quantity: ticket.quantity,
+    }));
+
+    setPaying(true);
+
+    try {
+      const result = await payWithRazorpay({
+        eventId: selectedEvent._id,
+        items,
+        token,
+        userName: user.name,
+        userEmail: user.email,
+        eventTitle: selectedEvent.title,
+      });
+
+      await dispatch(fetchEvents());
+      if (user._id) {
+        await dispatch(fetchTickets(user._id));
       }
 
-      const tickets =
-        summary.map(
-          (ticket) => ({
-            ticketId:
-              createTicketId(
-                selectedEvent.title,
-                ticket.name
-              ),
-            userId:
-              user._id || "",
-            eventId:
-              selectedEvent._id || "",
-            eventName:
-              selectedEvent.title,
-            ticketType:
-              ticket.name,
-            location:
-              selectedEvent.location,
-            date:
-              selectedEvent.eventDateTime,
-            price:
-              ticket.price,
-            quantity:
-              ticket.quantity,
-            purchaseDate:
-              new Date().toISOString(),
-          })
-        );
-
-      try {
-
-        const response =
-          await dispatch(
-            purchaseTicket(tickets)
-          ).unwrap();
-
-        await dispatch(
-          fetchEvents()
-        );
-
-        resetQuantities();
-
-        alert(
-          response.message ||
-            "Purchase confirmed!"
-        );
-
-      } catch (error: any) {
-
-        alert(
-          error?.message ||
-            String(error) ||
-            "Purchase failed"
-        );
-      }
-    };
+      resetQuantities();
+      alert(result.message);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Payment failed";
+      alert(message);
+    } finally {
+      setPaying(false);
+    }
+  };
 
   return (
     <div>
@@ -664,93 +596,34 @@ export default function BuyTickets() {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-5">
-              <h2 className="mb-5 text-2xl font-bold text-white">
-                Payment Details
-              </h2>
+              <h2 className="mb-3 text-2xl font-bold text-white">Checkout</h2>
 
-              <div className="space-y-5">
-                <input
-                  type="text"
-                  placeholder="Cardholder Name"
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)]"
-                />
+              <p className="mb-5 text-sm text-gray-400">
+                Pay securely with Razorpay — UPI, cards, and wallets supported.
+              </p>
 
-                <input
-                  type="text"
-                  placeholder="4242 4242 4242 4242"
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)]"
-                />
+              <button
+                type="button"
+                onClick={completePurchase}
+                disabled={summary.length === 0 || paying || !user?._id || !token}
+                className={`w-full rounded-xl py-4 text-lg font-semibold text-white transition-all ${
+                  summary.length === 0 || paying || !user?._id || !token
+                    ? "cursor-not-allowed bg-gray-600"
+                    : "bg-[var(--accent)] hover:opacity-90"
+                }`}
+              >
+                {paying
+                  ? "Opening payment..."
+                  : totalPrice === 0
+                    ? "Book free tickets"
+                    : `Pay ₹${totalPrice} with Razorpay`}
+              </button>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="MM/YY"
-                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
-                  />
-
-                  <input
-                    type="password"
-                    placeholder="CVV"
-                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm text-gray-300">
-                    Payment Method
-                  </label>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      type="button"
-                      className="rounded-xl border-2 border-[var(--accent)] bg-[var(--bg3)] py-3 text-sm text-white"
-                    >
-                      Card
-                    </button>
-
-                    <button
-                      type="button"
-                      className="rounded-xl border border-white/10 bg-[var(--bg3)] py-3 text-sm text-gray-300 transition-all hover:bg-white/5"
-                    >
-                      Apple Pay
-                    </button>
-
-                    <button
-                      type="button"
-                      className="rounded-xl border border-white/10 bg-[var(--bg3)] py-3 text-sm text-gray-300 transition-all hover:bg-white/5"
-                    >
-                      PayPal
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={completePurchase}
-                  disabled={
-                    totalPrice === 0 ||
-                    ticketLoading ||
-                    !user?._id
-                  }
-                  className={`w-full rounded-xl py-4 text-lg font-semibold text-white transition-all ${
-                    totalPrice === 0 ||
-                    ticketLoading ||
-                    !user?._id
-                      ? "cursor-not-allowed bg-gray-600"
-                      : "bg-[var(--accent)] hover:opacity-90"
-                  }`}
-                >
-                  {ticketLoading
-                    ? "Processing..."
-                    : "Complete Purchase"}
-                </button>
-
-                {!user?._id && (
-                  <p className="text-center text-sm text-gray-400">
-                    Login is required before purchasing tickets.
-                  </p>
-                )}
-              </div>
+              {!user?._id && (
+                <p className="mt-3 text-center text-sm text-gray-400">
+                  Please log in to buy tickets.
+                </p>
+              )}
             </div>
           </div>
         </div>
