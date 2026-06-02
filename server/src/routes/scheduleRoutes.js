@@ -13,6 +13,11 @@ const {
   "../controllers/scheduleController"
 );
 
+const {
+  protect,
+  adminOrOrganizer,
+} = require("../middleware/adminMiddleware");
+
 router.get(
   "/",
   getSchedules
@@ -25,11 +30,15 @@ router.get(
 
 router.post(
   "/",
+  protect,
+  adminOrOrganizer,
   upsertSchedule
 );
 
 router.post(
   "/event/:eventId/sessions",
+  protect,
+  adminOrOrganizer,
   addSession
 );
 

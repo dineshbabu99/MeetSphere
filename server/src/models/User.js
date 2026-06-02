@@ -22,8 +22,8 @@ const userSchema =
       role: {
         type: String,
         enum: [
-          "SuperAdmin",
           "Admin",
+          "Event Organizer",
           "User",
         ],
         default: "User",

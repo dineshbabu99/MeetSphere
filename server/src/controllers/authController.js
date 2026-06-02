@@ -7,9 +7,8 @@ const generateToken =  require("../utils/generateToken");
 // REGISTER USER
 const registerUser = async (req,res) => {
 try {
-    const {name,email,password,} = req.body;
-
-    // Check existing user
+    const {name,email,role,password,} = req.body;
+  console.log(req.body);
     const userExists =await User.findOne({email,});
 
     if (userExists) {
@@ -18,13 +17,11 @@ try {
         .json({message: "User already exists",});
     }
 
-    // Hash password
     const salt =await bcrypt.genSalt(10);
 
     const hashedPassword =await bcrypt.hash(password, salt);
 
-    // Create user
-    const user =await User.create({name,email,password:hashedPassword,});
+    const user =await User.create({name,email,role,password:hashedPassword,});
 
     res.status(201).json({
       _id: user._id,
@@ -220,8 +217,8 @@ const updateUserRole =
 
       if (
         ![
-          "SuperAdmin",
           "Admin",
+          "Event Organizer",
           "User",
         ].includes(role)
       ) {

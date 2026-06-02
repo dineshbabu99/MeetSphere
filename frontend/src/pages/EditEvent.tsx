@@ -24,12 +24,16 @@ const toLocalDateTime = (value?: string) => {
   return local.toISOString().slice(0, 16);
 };
 
+const toApiDateTime = (value: string) =>
+  value ? new Date(value).toISOString() : value;
+
 export default function EditEvent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const { events, loading } = useAppSelector((state) => state.events);
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   const [eventData, setEventData] = useState({
     title: "",
@@ -57,6 +61,17 @@ export default function EditEvent() {
     const event = events.find((item) => item._id === id);
     if (!event || initialized) return;
 
+    if (currentUser?.role === "Event Organizer") {
+      const organizer =
+        typeof event.organizer === "string"
+          ? event.organizer
+          : event.organizer?._id;
+
+      if (organizer !== currentUser._id) {
+        return;
+      }
+    }
+
     setEventData({
       title: event.title || "",
       description: event.description || "",
@@ -82,7 +97,7 @@ export default function EditEvent() {
     );
 
     setInitialized(true);
-  }, [events, id, initialized]);
+  }, [currentUser, events, id, initialized]);
 
   const handleChange = (
     e:
@@ -138,6 +153,9 @@ export default function EditEvent() {
         eventId: id,
         eventData: {
           ...eventData,
+          eventDateTime: toApiDateTime(eventData.eventDateTime),
+          bookingStart: toApiDateTime(eventData.bookingStart),
+          bookingEnd: toApiDateTime(eventData.bookingEnd),
           capacity: Number(eventData.capacity),
           tickets: tickets.map(({ id, ...ticket }) => ({
             _id: ticket._id,

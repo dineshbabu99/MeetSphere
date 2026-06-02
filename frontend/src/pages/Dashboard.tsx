@@ -6,7 +6,7 @@ export default function Dashboard() {
   const { user } = useAppSelector((state) => state.auth);
 
   const isAdmin =
-    user?.role === "Admin" || user?.role === "SuperAdmin";
+    user?.role === "Admin";
 
   return isAdmin ? <AdminHomeDashboard /> : <UserDashboard />;
 }

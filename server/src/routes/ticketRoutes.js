@@ -17,7 +17,7 @@ const {
 );
 const {
   protect,
-  adminOnly,
+  adminOrOrganizer,
 } = require("../middleware/adminMiddleware");
 
 
@@ -30,14 +30,14 @@ router.post(
 router.get(
   "/admin/all",
   protect,
-  adminOnly,
+  adminOrOrganizer,
   getAllTickets
 );
 
 router.patch(
   "/attendance/:id",
   protect,
-  adminOnly,
+  adminOrOrganizer,
   updateAttendanceStatus
 );
 

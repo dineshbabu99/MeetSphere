@@ -23,7 +23,7 @@ export default function Sidebar() {
       <div className="space-y-10 px-4 py-8">
         
       {menuSections.map((section) => {
-
+        console.log(user);
   const filteredItems =
     section.items.filter((item) =>
       item.roles.includes(

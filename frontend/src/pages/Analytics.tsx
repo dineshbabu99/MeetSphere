@@ -68,6 +68,10 @@ export default function Analytics() {
   const [revenueTab, setRevenueTab] = useState<"weekly" | "monthly">("weekly");
   const dispatch = useAppDispatch();
 
+  const currentUser = useAppSelector(
+    (state) => state.auth.user
+  );
+
   const { events, loading: eventsLoading } = useAppSelector(
     (state) => state.events
   );
@@ -80,51 +84,82 @@ export default function Analytics() {
 
   useEffect(() => {
     dispatch(fetchEvents());
-    dispatch(fetchUsers());
     dispatch(fetchAllTickets());
-  }, [dispatch]);
+
+    if (currentUser?.role === "Admin") {
+      dispatch(fetchUsers());
+    }
+  }, [dispatch, currentUser?.role]);
+
+  const visibleEvents = useMemo(() => {
+    if (currentUser?.role !== "Event Organizer") {
+      return events;
+    }
+
+    return events.filter((event) => {
+      const organizer =
+        typeof event.organizer === "string"
+          ? event.organizer
+          : event.organizer?._id;
+
+      return organizer === currentUser._id;
+    });
+  }, [currentUser, events]);
+
+  const visibleEventIds = useMemo(
+    () => new Set(visibleEvents.map((event) => event._id).filter(Boolean)),
+    [visibleEvents]
+  );
+
+  const visibleTickets = useMemo(() => {
+    if (currentUser?.role !== "Event Organizer") {
+      return tickets;
+    }
+
+    return tickets.filter((ticket) => visibleEventIds.has(ticket.eventId));
+  }, [currentUser?.role, tickets, visibleEventIds]);
 
   const totalRevenue = useMemo(
-    () => tickets.reduce((sum, t) => sum + ticketAmount(t), 0),
-    [tickets]
+    () => visibleTickets.reduce((sum, t) => sum + ticketAmount(t), 0),
+    [visibleTickets]
   );
 
   const ticketsSold = useMemo(
-    () => tickets.reduce((sum, t) => sum + t.quantity, 0),
-    [tickets]
+    () => visibleTickets.reduce((sum, t) => sum + t.quantity, 0),
+    [visibleTickets]
   );
 
   const attendanceRate = useMemo(() => {
-    if (tickets.length === 0) return 0;
-    const attended = tickets.filter(
+    if (visibleTickets.length === 0) return 0;
+    const attended = visibleTickets.filter(
       (t) => t.attendanceStatus === "Attended"
     ).length;
-    return Math.round((attended / tickets.length) * 100);
-  }, [tickets]);
+    return Math.round((attended / visibleTickets.length) * 100);
+  }, [visibleTickets]);
 
   const revenueChart = useMemo(
-    () => buildRevenueChart(tickets, revenueTab),
-    [tickets, revenueTab]
+    () => buildRevenueChart(visibleTickets, revenueTab),
+    [visibleTickets, revenueTab]
   );
 
   const categoryChart = useMemo(
-    () => buildCategoryChart(events),
-    [events]
+    () => buildCategoryChart(visibleEvents),
+    [visibleEvents]
   );
 
   const attendanceChart = useMemo(
-    () => buildAttendanceChart(tickets),
-    [tickets]
+    () => buildAttendanceChart(visibleTickets),
+    [visibleTickets]
   );
 
   const eventStatusChart = useMemo(
-    () => buildEventStatusChart(events),
-    [events]
+    () => buildEventStatusChart(visibleEvents),
+    [visibleEvents]
   );
 
   const topEventsChart = useMemo(
-    () => buildTopEventsChart(tickets, events),
-    [tickets, events]
+    () => buildTopEventsChart(visibleTickets, visibleEvents),
+    [visibleTickets, visibleEvents]
   );
 
   const loading = eventsLoading || ticketsLoading || usersLoading;
@@ -133,7 +168,7 @@ export default function Analytics() {
     {
       label: "Total Revenue",
       value: loading ? "..." : formatRevenue(totalRevenue),
-      sub: `${tickets.length} bookings`,
+      sub: `${visibleTickets.length} bookings`,
       color: "text-rose-400",
       bg: "bg-rose-500/10",
     },
@@ -153,8 +188,12 @@ export default function Analytics() {
     },
     {
       label: "Active Users",
-      value: loading ? "..." : users.length,
-      sub: `${events.filter((e) => e.status === "Open").length} live events`,
+      value: loading
+        ? "..."
+        : currentUser?.role === "Admin"
+        ? users.length
+        : new Set(visibleTickets.map((ticket) => ticket.userId)).size,
+      sub: `${visibleEvents.filter((e) => e.status === "Open").length} live events`,
       color: "text-violet-400",
       bg: "bg-violet-500/10",
     },
@@ -275,7 +314,7 @@ export default function Analytics() {
               <tr>
                 <td className="text-gray-400">Total events</td>
                 <td className="font-semibold text-white">
-                  {loading ? "..." : events.length}
+                  {loading ? "..." : visibleEvents.length}
                 </td>
               </tr>
               <tr>
@@ -283,7 +322,7 @@ export default function Analytics() {
                 <td className="font-semibold text-yellow-400">
                   {loading
                     ? "..."
-                    : events.filter((e) => e.status === "Pending").length}
+                    : visibleEvents.filter((e) => e.status === "Pending").length}
                 </td>
               </tr>
               <tr>
@@ -291,7 +330,7 @@ export default function Analytics() {
                 <td className="font-semibold text-green-400">
                   {loading
                     ? "..."
-                    : events.filter((e) => e.status === "Open").length}
+                    : visibleEvents.filter((e) => e.status === "Open").length}
                 </td>
               </tr>
               <tr>
@@ -299,7 +338,7 @@ export default function Analytics() {
                 <td className="font-semibold text-gray-300">
                   {loading
                     ? "..."
-                    : events.filter(
+                    : visibleEvents.filter(
                         (e) =>
                           e.status === "Draft" || e.status === "Rejected"
                       ).length}
@@ -308,9 +347,9 @@ export default function Analytics() {
               <tr>
                 <td className="text-gray-400">Avg. order value</td>
                 <td className="font-semibold text-rose-400">
-                  {loading || tickets.length === 0
+                  {loading || visibleTickets.length === 0
                     ? "..."
-                    : formatRevenue(totalRevenue / tickets.length)}
+                    : formatRevenue(totalRevenue / visibleTickets.length)}
                 </td>
               </tr>
             </tbody>

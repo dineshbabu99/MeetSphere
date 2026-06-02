@@ -97,6 +97,11 @@ export default function Schedule() {
     (state) => state.schedules
   );
 
+  const currentUser =
+    useAppSelector(
+      (state) => state.auth.user
+    );
+
   const liveEvents =
     useMemo(
       () => {
@@ -105,14 +110,33 @@ export default function Schedule() {
           new Date();
 
         return events.filter(
-          (event) =>
-            event.status === "Open" &&
-            new Date(
-              event.eventDateTime
-            ) >= now
+          (event) => {
+            if (
+              event.status !== "Open" ||
+              new Date(
+                event.eventDateTime
+              ) < now
+            ) {
+              return false;
+            }
+
+            if (
+              currentUser?.role !==
+              "Event Organizer"
+            ) {
+              return true;
+            }
+
+            const organizer =
+              typeof event.organizer === "string"
+                ? event.organizer
+                : event.organizer?._id;
+
+            return organizer === currentUser._id;
+          }
         );
       },
-      [events]
+      [currentUser, events]
     );
 
   const [

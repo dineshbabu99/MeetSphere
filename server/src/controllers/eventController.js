@@ -1,6 +1,18 @@
 const Event =
   require("../models/Event");
 
+const isAdmin = (user) =>
+  user?.role === "Admin";
+
+const isOrganizer = (user) =>
+  user?.role === "Event Organizer";
+
+const isEventOwner = (event, user) =>
+  event.organizer &&
+  user?._id &&
+  event.organizer.toString() ===
+    user._id.toString();
+
 
 
 const createEvent =
@@ -12,7 +24,10 @@ const createEvent =
 
 
       const event =
-        await Event.create( req.body);
+        await Event.create({
+          ...req.body,
+          organizer: req.user?._id,
+        });
 
       res.status(201).json({
         message:
@@ -136,9 +151,29 @@ const updateEvent =
           });
       }
 
+      if (
+        isOrganizer(req.user) &&
+        !isEventOwner(existing, req.user)
+      ) {
+
+        return res
+          .status(403)
+          .json({
+            message:
+              "You can update only your events",
+          });
+      }
+
       const updates = {
         ...req.body,
       };
+
+      if (!isAdmin(req.user)) {
+
+        delete updates.status;
+        delete updates.organizer;
+        delete updates.sold;
+      }
 
       if (
         updates.tickets &&

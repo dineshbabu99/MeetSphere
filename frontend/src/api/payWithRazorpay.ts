@@ -1,7 +1,10 @@
 import axios from "axios";
 
- const API = import.meta.env.VITE_API_BASE_URL + "/payment" || "http://localhost:5000/api/payments";
-// const API = "http://localhost:5000/api/payments";
+const API_BASE =
+  // import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
+
+const API = `${API_BASE}/payments`;
 
 type CartItem = {
   ticketType: string;

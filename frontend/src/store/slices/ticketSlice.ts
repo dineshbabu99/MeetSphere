@@ -9,7 +9,11 @@ import type {
 
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_BASE_URL + "/tickets" || "http://localhost:5000/api/tickets";
+const API_BASE =
+  // import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
+
+const API = `${API_BASE}/tickets`;
 
 
 export type TicketItem = {

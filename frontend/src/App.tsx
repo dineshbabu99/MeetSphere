@@ -41,13 +41,16 @@ function App() {
             <Route path="/my-schedule" element={<UserSchedule />} />
             <Route path="/user-details" element={<UserDetails />} />
 
-            <Route element={ <RoleProtectedRoute allowedRoles={["SuperAdmin", "Admin"]}/>}>
+            <Route element={ <RoleProtectedRoute allowedRoles={["Admin", "Event Organizer"]}/>}>
               <Route path="/create" element={ <CreateEvent /> } />
               <Route path="/schedule" element={<Schedule /> }/>
               <Route path="/attendees" element={ <AttendeeManagement /> } />
-              <Route path="/admin" element={ <AdminDashboard />}/>
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/events/:id/edit" element={<EditEvent />} />
+            </Route>
+
+            <Route element={ <RoleProtectedRoute allowedRoles={["Admin"]}/>}>
+              <Route path="/admin" element={ <AdminDashboard />}/>
             </Route>
           </Route>
         </Route>

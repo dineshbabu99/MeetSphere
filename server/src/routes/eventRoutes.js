@@ -16,10 +16,13 @@ const {
 const {
   protect,
   adminOnly,
+  adminOrOrganizer,
 } = require("../middleware/adminMiddleware");
 
 router.post(
   "/create",
+  protect,
+  adminOrOrganizer,
   createEvent
 );
 
@@ -38,7 +41,7 @@ router.patch(
 router.put(
   "/:id",
   protect,
-  adminOnly,
+  adminOrOrganizer,
   updateEvent
 );
 

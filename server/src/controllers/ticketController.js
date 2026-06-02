@@ -168,10 +168,31 @@ const getAllTickets =
   async (req, res) => {
 
     try {
+      let eventFilter = {};
+
+      if (
+        req.user?.role ===
+        "Event Organizer"
+      ) {
+
+        const events =
+          await Event.find({
+            organizer: req.user._id,
+          }).select("_id");
+
+        eventFilter = {
+          eventId: {
+            $in: events.map((event) =>
+              event._id.toString()
+            ),
+          },
+        };
+      }
 
       const tickets =
         await Ticket.find({
           status: "Active",
+          ...eventFilter,
         }).sort({
           createdAt: -1,
         });
@@ -256,15 +277,8 @@ const updateAttendanceStatus =
       }
 
       const ticket =
-        await Ticket.findByIdAndUpdate(
-          req.params.id,
-          {
-            attendanceStatus,
-          },
-          {
-            new: true,
-            runValidators: true,
-          }
+        await Ticket.findById(
+          req.params.id
         );
 
       if (!ticket) {
@@ -276,6 +290,37 @@ const updateAttendanceStatus =
               "Ticket not found",
           });
       }
+
+      if (
+        req.user?.role ===
+        "Event Organizer"
+      ) {
+
+        const event =
+          await Event.findById(
+            ticket.eventId
+          );
+
+        if (
+          !event ||
+          !event.organizer ||
+          event.organizer.toString() !==
+            req.user._id.toString()
+        ) {
+
+          return res
+            .status(403)
+            .json({
+              message:
+                "You can update attendance only for your events",
+            });
+        }
+      }
+
+      ticket.attendanceStatus =
+        attendanceStatus;
+
+      await ticket.save();
 
       res.status(200).json({
         message:

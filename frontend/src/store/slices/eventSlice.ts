@@ -5,7 +5,11 @@ import {
 
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_BASE_URL + "/events" || "http://localhost:5000/api/events";
+const API_BASE =
+  // import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
+
+const API = `${API_BASE}/events`;
 
 export type TicketType = {
   _id?: string;
@@ -26,6 +30,11 @@ export type TicketType = {
 
 export type EventItem = {
   _id?: string;
+  organizer?:
+    | string
+    | {
+        _id?: string;
+      };
 
   title: string;
 
@@ -114,6 +123,12 @@ export const createEvent =
       eventData: EventItem,
       thunkAPI
     ) => {
+      const state =
+        thunkAPI.getState() as {
+          auth: {
+            token: string | null;
+          };
+        };
 
       try {
 
@@ -121,7 +136,13 @@ export const createEvent =
           await axios.post(
             `${API}/create`,
 
-            eventData
+            eventData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${state.auth.token}`,
+              },
+            }
           );
 
         return response.data.event;

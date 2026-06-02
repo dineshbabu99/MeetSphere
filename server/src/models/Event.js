@@ -64,6 +64,11 @@ const eventSchema =
         default: 0,
       },
 
+      organizer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+
       status: {
         type: String,
 

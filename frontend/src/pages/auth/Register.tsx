@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { registerUser } from "../../store/slices/registerSlice";
+import { registerUser, type Role } from "../../store/slices/registerSlice";
 
 
 
@@ -17,6 +17,7 @@ const {loading, error,} = useAppSelector((state) => state.register);
     useState({
       name: "",
       email: "",
+      role: "",
       password: "",
       confirmPassword: "",
     });
@@ -25,7 +26,7 @@ const {loading, error,} = useAppSelector((state) => state.register);
   //   useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+ e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({
       ...formData,
@@ -57,6 +58,8 @@ const handleRegister = async (
 
         password:
           formData.password,
+
+        role: formData.role as Role,
       })
     );
 
@@ -75,6 +78,7 @@ const handleRegister = async (
       email: "",
       password: "",
       confirmPassword: "",
+      role: "",
     });
 
     navigate("/login");
@@ -139,8 +143,32 @@ const handleRegister = async (
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white outline-none transition-all placeholder:text-gray-500 focus:border-violet-500"
             />
           </div>
+    
+        {/* User Type */}
+        <div>
+            <label className="mb-2 block text-sm text-gray-300">
+              Who you are?
+            </label>
+          <select
+  name="role"
+  value={formData.role}
+  onChange={handleChange}
+  required
+  className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white outline-none transition-all focus:border-violet-500"
+>
+  <option value="" className="bg-[#111122] text-white">
+    Select Type
+  </option>
+  <option value="User" className="bg-[#111122] text-white">
+    User
+  </option>
+  <option value="Event Organizer" className="bg-[#111122] text-white">
+    Event Organizer
+  </option>
+</select>
+          </div>
 
-          {/* Password */}
+
           <div>
             <label className="mb-2 block text-sm text-gray-300">
               Password
@@ -230,34 +258,6 @@ const handleRegister = async (
             Sign in
           </Link>
         </p>
-
-        {/* Divider */}
-        {/* <div className="my-8 flex items-center">
-          
-          <div className="h-px flex-1 bg-white/10"></div>
-
-          <span className="px-4 text-sm text-gray-500">
-            OR REGISTER WITH
-          </span>
-
-          <div className="h-px flex-1 bg-white/10"></div>
-        </div> */}
-
-        {/* Socials */}
-        {/* <div className="flex justify-center gap-4">
-          
-          <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
-            🌐
-          </button>
-
-          <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
-            🐦
-          </button>
-
-          <button className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl transition-all hover:bg-white/10">
-            🟠
-          </button>
-        </div> */}
       </div>
     </div>
   );

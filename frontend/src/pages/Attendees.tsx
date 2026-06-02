@@ -33,6 +33,11 @@ export default function AttendeeManagement() {
     (state) => state.events
   );
 
+  const currentUser =
+    useAppSelector(
+      (state) => state.auth.user
+    );
+
   const {
     tickets,
     loading,
@@ -62,10 +67,38 @@ export default function AttendeeManagement() {
     useMemo(
       () =>
         events.filter(
-          (event) =>
-            event.status === "Open"
+          (event) => {
+            if (event.status !== "Open") {
+              return false;
+            }
+
+            if (
+              currentUser?.role !==
+              "Event Organizer"
+            ) {
+              return true;
+            }
+
+            const organizer =
+              typeof event.organizer === "string"
+                ? event.organizer
+                : event.organizer?._id;
+
+            return organizer === currentUser._id;
+          }
         ),
-      [events]
+      [currentUser, events]
+    );
+
+  const activeEventIds =
+    useMemo(
+      () =>
+        new Set(
+          activeEvents
+            .map((event) => event._id)
+            .filter(Boolean)
+        ),
+      [activeEvents]
     );
 
   const filteredTickets =
@@ -73,6 +106,15 @@ export default function AttendeeManagement() {
 
       return tickets.filter(
         (ticket) => {
+          if (
+            currentUser?.role ===
+              "Event Organizer" &&
+            !activeEventIds.has(
+              ticket.eventId
+            )
+          ) {
+            return false;
+          }
 
           const matchesEvent =
             !eventId ||
@@ -107,6 +149,8 @@ export default function AttendeeManagement() {
       eventId,
       search,
       tickets,
+      currentUser?.role,
+      activeEventIds,
     ]);
 
   const counts =

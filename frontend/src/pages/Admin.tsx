@@ -61,7 +61,6 @@ export default function AdminDashboard() {
 
   const {
     users,
-    user: currentUser,
     loading: usersLoading,
     error: usersError,
   } = useAppSelector(
@@ -416,15 +415,6 @@ export default function AdminDashboard() {
                     <td className="py-4">
                       <select
                         value={user.role}
-                        disabled={
-                          currentUser?._id ===
-                            user._id &&
-                          users.filter(
-                            (item) =>
-                              item.role ===
-                              "SuperAdmin"
-                          ).length <= 1
-                        }
                         onChange={(event) =>
                           handleRoleChange(
                             user._id || "",
@@ -440,8 +430,8 @@ export default function AdminDashboard() {
                         <option value="Admin">
                           Admin
                         </option>
-                        <option value="SuperAdmin">
-                          SuperAdmin
+                        <option value="Event Organizer">
+                          Event Organizer
                         </option>
                       </select>
                     </td>

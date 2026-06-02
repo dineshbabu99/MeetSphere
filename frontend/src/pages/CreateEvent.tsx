@@ -4,6 +4,11 @@ import { useAppDispatch } from "../store/hooks";
 
 import { createEvent } from "../store/slices/eventSlice";
 
+const toApiDateTime = (value: string) =>
+  value
+    ? new Date(value).toISOString()
+    : value;
+
 
 export default function CreateEvent() {
   const dispatch = useAppDispatch();
@@ -63,6 +68,9 @@ const publishEvent =
       await dispatch(
       createEvent({
   ...eventData,
+  eventDateTime: toApiDateTime(eventData.eventDateTime),
+  bookingStart: toApiDateTime(eventData.bookingStart),
+  bookingEnd: toApiDateTime(eventData.bookingEnd),
 
   capacity: Number(
     eventData.capacity
@@ -97,6 +105,9 @@ const saveDraft =
       await dispatch(
        createEvent({
   ...eventData,
+  eventDateTime: toApiDateTime(eventData.eventDateTime),
+  bookingStart: toApiDateTime(eventData.bookingStart),
+  bookingEnd: toApiDateTime(eventData.bookingEnd),
 
   capacity: Number(
     eventData.capacity

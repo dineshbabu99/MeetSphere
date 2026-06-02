@@ -8,8 +8,21 @@ const populateEvent =
   {
     path: "event",
     select:
-      "title category location eventDateTime image status",
+      "title category location eventDateTime image status organizer",
   };
+
+const canManageEvent = (event, user) => {
+  if (user?.role === "Admin") {
+    return true;
+  }
+
+  return (
+    user?.role === "Event Organizer" &&
+    event.organizer &&
+    event.organizer.toString() ===
+      user._id.toString()
+  );
+};
 
 const getSchedules =
   async (req, res) => {
@@ -102,6 +115,16 @@ const upsertSchedule =
           });
       }
 
+      if (!canManageEvent(event, req.user)) {
+
+        return res
+          .status(403)
+          .json({
+            message:
+              "You can manage schedules only for your events",
+          });
+      }
+
       const schedule =
         await Schedule.findOneAndUpdate(
           {
@@ -178,6 +201,16 @@ const addSession =
           .json({
             message:
               "Event not found",
+          });
+      }
+
+      if (!canManageEvent(event, req.user)) {
+
+        return res
+          .status(403)
+          .json({
+            message:
+              "You can manage schedules only for your events",
           });
       }
 

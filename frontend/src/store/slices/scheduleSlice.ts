@@ -9,7 +9,11 @@ import type {
   EventItem,
 } from "./eventSlice";
 
-const API = import.meta.env.VITE_API_BASE_URL + "/schedules" || "http://localhost:5000/api/schedules";
+const API_BASE =
+  // import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
+
+const API = `${API_BASE}/schedules`;
 
 export type ScheduleSession = {
   _id?: string;
@@ -103,6 +107,12 @@ export const addScheduleSession =
       payload: AddSessionPayload,
       thunkAPI
     ) => {
+      const state =
+        thunkAPI.getState() as {
+          auth: {
+            token: string | null;
+          };
+        };
 
       try {
 
@@ -114,7 +124,13 @@ export const addScheduleSession =
         const response =
           await axios.post(
             `${API}/event/${eventId}/sessions`,
-            sessionData
+            sessionData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${state.auth.token}`,
+              },
+            }
           );
 
         return response.data;

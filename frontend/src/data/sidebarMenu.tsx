@@ -1,11 +1,15 @@
 const adminRoles = [
-  "SuperAdmin",
   "Admin",
 ];
 
-const allRoles = [
-  "SuperAdmin",
+const organizerRoles = [
   "Admin",
+  "Event Organizer",
+];
+
+const allRoles = [
+  "Admin",
+  "Event Organizer",
   "User",
 ];
 
@@ -23,7 +27,7 @@ export const menuSections = [
         name: "Analytics",
         path: "/analytics",
          icon: "📈",
-        roles: adminRoles,
+        roles: organizerRoles,
       },
     ],
   },
@@ -41,13 +45,13 @@ export const menuSections = [
         name: "Create Event",
         path: "/create",
         icon: "✨",
-        roles: adminRoles,
+        roles: organizerRoles,
       },
       {
         name: "Manage Schedules",
         path: "/schedule",
         icon: "📋",
-        roles: adminRoles,
+        roles: organizerRoles,
       },
     ],
   },
@@ -78,7 +82,7 @@ export const menuSections = [
         name: "Attendees",
         path: "/attendees",
         icon: "👥",
-        roles: adminRoles,
+        roles: organizerRoles,
       },
     ],
   },

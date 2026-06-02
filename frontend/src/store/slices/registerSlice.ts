@@ -5,10 +5,15 @@ import {
 
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_BASE_URL + "/auth" || "http://localhost:5000/api/auth";
+const API_BASE =
+  // import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
+
+const API = `${API_BASE}/auth`;
 
 export type Role =
   | "Admin"
+  | "Event Organizer"
   | "User";
 
 export type User = {
@@ -50,6 +55,7 @@ export const registerUser =
       userData: {
         name: string;
         email: string;
+        role: Role;
         password: string;
       },
 
