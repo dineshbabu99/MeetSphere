@@ -28,14 +28,16 @@ const createEvent =
           ...req.body,
           organizer: req.user?._id,
         });
-
+        // console.log("Created event:", event);
       res.status(201).json({
         message:
           "Event created successfully",
 
         event,
       });
+const dbEvent = await Event.findById(event._id);
 
+// console.log("After DB Save:", dbEvent);
     } catch (error) {
 
       res.status(500).json({
@@ -51,8 +53,16 @@ const getEvents =
 
     try {
 
-      const events =
-        await Event.find();
+      let filter = {};
+
+      if (isOrganizer(req.user)) {
+        filter = {
+          organizer: req.user._id,
+        };
+      }
+
+      const events = await Event.find(filter)
+      .populate("organizer", "name email role");
 
       res.status(200).json(
         events
@@ -239,7 +249,7 @@ const deleteEvent =
     try {
 
       const event =
-        await Event.findByIdAndDelete(
+        await Event.findById(
           req.params.id
         );
 
@@ -252,6 +262,23 @@ const deleteEvent =
               "Event not found",
           });
       }
+
+      if (
+        isOrganizer(req.user) &&
+        !isEventOwner(event, req.user)
+      ) {
+
+        return res
+          .status(403)
+          .json({
+            message:
+              "You can delete only your events",
+          });
+      }
+
+      await Event.findByIdAndDelete(
+        req.params.id
+      );
 
       res.status(200).json({
         message:

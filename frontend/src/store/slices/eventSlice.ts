@@ -27,15 +27,18 @@ export type TicketType = {
 };
 
 
+type Organizer = {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 export type EventItem = {
   _id?: string;
-  organizer?:
-    | string
-    | {
-        _id?: string;
-      };
-
+  
+  organizer?: Organizer;
+  
   title: string;
 
   description: string;

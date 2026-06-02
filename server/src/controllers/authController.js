@@ -8,7 +8,7 @@ const generateToken =  require("../utils/generateToken");
 const registerUser = async (req,res) => {
 try {
     const {name,email,role,password,} = req.body;
-  console.log(req.body);
+  // console.log(req.body);
     const userExists =await User.findOne({email,});
 
     if (userExists) {

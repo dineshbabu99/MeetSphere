@@ -104,6 +104,7 @@ export default function AdminDashboard() {
       [events]
     );
 
+    // console.log(activeEvents);
   const totalRevenue =
     useMemo(
       () =>
@@ -456,12 +457,15 @@ export default function AdminDashboard() {
                 <th className="pb-4">Date</th>
                 <th className="pb-4">Sold</th>
                 <th className="pb-4">Status</th>
+                <th className="pb-4">Organizer</th>
+                <th className="pb-4">Organizer Email</th>
                 <th className="pb-4">Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {activeEvents.map((event) => (
+              
                 <tr
                   key={event._id}
                   className="border-b border-white/5"
@@ -486,6 +490,12 @@ export default function AdminDashboard() {
                     >
                       {event.status}
                     </span>
+                  </td>
+                    <td className="py-4 text-white">
+                    {event.organizer?.name || "Unknown Organizer"}
+                  </td>
+                    <td className="py-4 text-white">
+                    {event.organizer?.email || "Unknown Organizer"}
                   </td>
 
                   <td className="py-4">
