@@ -34,11 +34,23 @@ export async function payWithRazorpay({
 }: PayOptions): Promise<PayResult> {
   const headers = { Authorization: `Bearer ${token}` };
 
-  const orderRes = await axios.post(
-    `${API}/create-order`,
-    { eventId, items },
-    { headers }
-  );
+  let orderRes;
+
+  try {
+    orderRes = await axios.post(
+      `${API}/create-order`,
+      { eventId, items },
+      { headers }
+    );
+  } catch (err: unknown) {
+    const message =
+      axios.isAxiosError(err) &&
+      err.response?.data?.message
+        ? err.response.data.message
+        : "Unable to start payment";
+
+    throw new Error(message);
+  }
 
   // Free event — tickets already created
   if (orderRes.data.free) {

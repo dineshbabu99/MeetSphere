@@ -13,6 +13,10 @@ const allRoles = [
   "User",
 ];
 
+const userRoles = [
+  "User",
+];
+
 export const menuSections = [
   {
     title: "Overview",
@@ -64,19 +68,19 @@ export const menuSections = [
         path: "/buyTickets",
           icon: "🎟️",
         badge: "3",
-        roles: allRoles,
+        roles: userRoles,
       },
       {
         name: "My Tickets",
         path: "/myTickets",
         icon: "🪪",
-        roles: allRoles,
+        roles: userRoles,
       },
       {
         name: "My Schedule",
         path: "/my-schedule",
         icon: "🗓️",
-        roles: allRoles,
+        roles: userRoles,
       },
       {
         name: "Attendees",

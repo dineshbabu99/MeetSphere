@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
-import { createEvent, deleteEvent, fetchEvents, updateEvent } from "../store/slices/eventSlice";
+import {
+  createEvent,
+  deleteEvent,
+  fetchEvents,
+  updateEvent,
+  updateEventStatus,
+} from "../store/slices/eventSlice";
 import { formatDate } from "../data/dashboardStats";
 // import { Link } from "react-router-dom";
 
@@ -56,7 +62,7 @@ const [eventData, setEventData] =
   const [tickets, setTickets] = useState<Ticket[]>([
   {
     id: crypto.randomUUID(),
-    name: "General Admission",
+    name: "",
     description: "",
     price: 0,
     capacity: 0,
@@ -280,7 +286,7 @@ setEventData({
         crypto.randomUUID(),
 
       name:
-        "General Admission",
+        "",
 
       description: "",
 
@@ -350,6 +356,36 @@ const minTicketPrice = (items: typeof tickets) => {
       if (!confirmed) return;
 
       await dispatch(deleteEvent(eventId));
+    };
+
+  const publishDraft =
+    async (eventId: string) => {
+
+      const status =
+        user?.role === "Admin"
+          ? "Open"
+          : "Pending";
+
+      const result =
+        await dispatch(
+          updateEventStatus({
+            eventId,
+            status,
+          })
+        );
+
+      if (
+        updateEventStatus.fulfilled.match(
+          result
+        )
+      ) {
+
+        alert(
+          status === "Open"
+            ? "Event published"
+            : "Event submitted for approval"
+        );
+      }
     };
 
   const saveChanges = async () => {
@@ -589,11 +625,10 @@ const minTicketPrice = (items: typeof tickets) => {
           className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
           />
 
-        {/* Price */}
         <input
           type="number"
           placeholder="Price"
-          value={ticket.price}
+          value={ticket.price===0?"":ticket.price}
           onChange={(e) =>
             updateTicket(
               ticket.id,
@@ -608,7 +643,7 @@ const minTicketPrice = (items: typeof tickets) => {
         <input
           type="number"
           placeholder="Capacity"
-          value={ticket.capacity}
+          value={ticket.capacity === 0 ? "" : ticket.capacity}
           onChange={(e) =>
             updateTicket(
               ticket.id,
@@ -816,6 +851,20 @@ const minTicketPrice = (items: typeof tickets) => {
 
                   <td className="py-4">
                     <div className="flex gap-2">
+                      {event.status === "Draft" && (
+                        <button
+                          onClick={() =>
+                            publishDraft(
+                              event._id || ""
+                            )
+                          }
+                          className="rounded-lg bg-green-500/20 px-3 py-2 text-sm text-green-300 transition-all hover:bg-green-500/30"
+                        >
+                          {user?.role === "Admin"
+                            ? "Publish"
+                            : "Submit"}
+                        </button>
+                      )}
                       {/* <Link
                         to={`/events/${event._id}/edit`}
                         className="rounded-lg bg-violet-500/20 px-3 py-2 text-sm text-violet-300 transition-all hover:bg-violet-500/30"

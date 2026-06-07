@@ -14,6 +14,9 @@ const [selectedEvent,setSelectedEvent] = useState<any>(null);
   const events = useAppSelector(
     (state) => state.events.events
   );
+  const user = useAppSelector(
+    (state) => state.auth.user
+  );
   const publishedEvents = events.filter(
     (event) => event.status === "Open"
   );
@@ -259,19 +262,23 @@ const bookingStatus =
     handleOpen(event)
   }
   disabled={
+    user?.role !== "User" ||
     soldOut ||
     !bookingStarted ||
     bookingEnded
   }
   className={`mt-5 w-full rounded-xl py-3 font-semibold text-white transition-all ${
     soldOut ||
+    user?.role !== "User" ||
     !bookingStarted ||
     bookingEnded
       ? "cursor-not-allowed bg-gray-600"
       : "bg-[var(--accent)] hover:opacity-90"
   }`}
 >
-  {soldOut
+  {user?.role !== "User"
+    ? "User Booking Only"
+    : soldOut
     ? "Sold Out"
     : !bookingStarted
     ? "Booking Not Started"

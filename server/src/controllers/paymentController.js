@@ -135,7 +135,22 @@ const createOrder = async (req, res) => {
       eventTitle: event.title,
     });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    const configurationError =
+      err.message?.includes(
+        "Razorpay keys missing"
+      );
+
+    res
+      .status(
+        configurationError
+          ? 503
+          : 400
+      )
+      .json({
+        message: configurationError
+          ? "Online payment is temporarily unavailable. Please contact the administrator."
+          : err.message,
+      });
   }
 };
 

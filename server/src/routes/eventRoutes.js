@@ -34,7 +34,7 @@ router.get(
 router.patch(
   "/:id/status",
   protect,
-  adminOnly,
+  adminOrOrganizer,
   updateEventStatus
 );
 

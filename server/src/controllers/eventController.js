@@ -28,7 +28,12 @@ const createEvent =
           ...req.body,
           organizer: req.user?._id,
         });
-        // console.log("Created event:", event);
+
+      await event.populate(
+        "organizer",
+        "name email role"
+      );
+
       res.status(201).json({
         message:
           "Event created successfully",
@@ -103,19 +108,12 @@ const updateEventStatus =
           });
       }
 
-      const event =
-        await Event.findByIdAndUpdate(
-          req.params.id,
-          {
-            status,
-          },
-          {
-            new: true,
-            runValidators: true,
-          }
+      const existing =
+        await Event.findById(
+          req.params.id
         );
 
-      if (!event) {
+      if (!existing) {
 
         return res
           .status(404)
@@ -125,10 +123,44 @@ const updateEventStatus =
           });
       }
 
+      if (
+        isOrganizer(req.user) &&
+        (
+          !isEventOwner(
+            existing,
+            req.user
+          ) ||
+          status !== "Pending" ||
+          ![
+            "Draft",
+            "Rejected",
+          ].includes(
+            existing.status
+          )
+        )
+      ) {
+
+        return res
+          .status(403)
+          .json({
+            message:
+              "Organizers can only submit their own events for approval",
+          });
+      }
+
+      existing.status =
+        status;
+
+      await existing.save();
+      await existing.populate(
+        "organizer",
+        "name email role"
+      );
+
       res.status(200).json({
         message:
           "Event status updated",
-        event,
+        event: existing,
       });
 
     } catch (error) {
@@ -226,6 +258,11 @@ const updateEvent =
             runValidators: true,
           }
         );
+
+      await event.populate(
+        "organizer",
+        "name email role"
+      );
 
       res.status(200).json({
         message:

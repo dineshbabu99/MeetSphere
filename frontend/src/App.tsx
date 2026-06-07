@@ -36,10 +36,13 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/"element={<Dashboard />}/>
             <Route path="/events" element={<Events />}/>
-            <Route path="/buyTickets" element={<BuyTickets />}/>
-            <Route path="/myTickets" element={<MyTickets />} />
-            <Route path="/my-schedule" element={<UserSchedule />} />
             <Route path="/user-details" element={<UserDetails />} />
+
+            <Route element={ <RoleProtectedRoute allowedRoles={["User"]}/>}>
+              <Route path="/buyTickets" element={<BuyTickets />}/>
+              <Route path="/myTickets" element={<MyTickets />} />
+              <Route path="/my-schedule" element={<UserSchedule />} />
+            </Route>
 
             <Route element={ <RoleProtectedRoute allowedRoles={["Admin", "Event Organizer"]}/>}>
               <Route path="/create" element={ <CreateEvent /> } />

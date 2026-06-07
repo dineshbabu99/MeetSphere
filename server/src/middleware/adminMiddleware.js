@@ -31,4 +31,22 @@ const adminOrOrganizer = (req, res, next) => {
   });
 };
 
-module.exports = { protect, adminOnly, adminOrOrganizer };
+const userOnly = (req, res, next) => {
+  if (
+    req.user &&
+    req.user.role === "User"
+  ) {
+    return next();
+  }
+
+  return res.status(403).json({
+    message: "Ticket booking is available only for users",
+  });
+};
+
+module.exports = {
+  protect,
+  adminOnly,
+  adminOrOrganizer,
+  userOnly,
+};
