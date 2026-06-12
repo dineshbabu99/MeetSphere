@@ -416,6 +416,7 @@ export default function AdminDashboard() {
                     <td className="py-4">
                       <select
                         value={user.role}
+                        disabled={user.role === "Admin"}
                         onChange={(event) =>
                           handleRoleChange(
                             user._id || "",

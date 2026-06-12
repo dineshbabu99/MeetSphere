@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -6,6 +6,7 @@ import {
   fetchEvents,
   updateEvent,
 } from "../store/slices/eventSlice";
+import { FiInfo } from "react-icons/fi";
 
 type LocalTicket = {
   id: string;
@@ -173,6 +174,13 @@ export default function EditEvent() {
       navigate("/admin");
     }
   };
+  const minDateTime = useMemo(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }, []);
+
+
 
   const ticketPrices = tickets
     .map((ticket) => ticket.price)
@@ -212,23 +220,29 @@ export default function EditEvent() {
           Back to Admin
         </button>
       </div>
-
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+
         <div className="space-y-6">
+
           <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
-            <h2 className="mb-6 text-2xl font-bold text-white">Event Details</h2>
+            <h2 className="mb-6 text-2xl font-bold text-white">
+              Event Details
+            </h2>
 
             <div className="space-y-5">
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-300">
                   Event Title
                 </label>
+
                 <input
                   type="text"
                   name="title"
                   value={eventData.title}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                  placeholder="e.g. TechSummit 2026"
+                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none transition-all focus:border-[var(--accent)]"
                 />
               </div>
 
@@ -236,25 +250,27 @@ export default function EditEvent() {
                 <label className="mb-2 block text-sm font-medium text-gray-300">
                   Description
                 </label>
+
                 <textarea
                   name="description"
                   value={eventData.description}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none transition-all focus:border-[var(--accent)]"
                 />
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
+
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-300">
                     Category
                   </label>
+
                   <select
                     name="category"
                     value={eventData.category}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
-                  >
+                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none">
                     <option>Technology</option>
                     <option>Music</option>
                     <option>Business</option>
@@ -267,11 +283,12 @@ export default function EditEvent() {
                   <label className="mb-2 block text-sm font-medium text-gray-300">
                     Location
                   </label>
+
                   <input
                     name="location"
                     value={eventData.location}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none transition-all focus:border-[var(--accent)]"
                   />
                 </div>
 
@@ -279,62 +296,72 @@ export default function EditEvent() {
                   <label className="mb-2 block text-sm font-medium text-gray-300">
                     Event Date & Time
                   </label>
+
                   <input
                     type="datetime-local"
                     name="eventDateTime"
                     value={eventData.eventDateTime}
                     onChange={handleChange}
+                    min={minDateTime}
                     className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
                   />
                 </div>
-
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={eventData.status}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
-                  >
-                    <option value="Open">Open</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Draft">Draft</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
-                </div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Booking Start Date & Time
+                    </label>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Booking Start
-                  </label>
+                    <div className="group relative">
+                      <FiInfo className="cursor-help text-gray-400" />
+
+                      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+                        Customers can start booking tickets from this date and time.
+                      </div>
+                    </div>
+                  </div>
+
                   <input
                     type="datetime-local"
                     name="bookingStart"
                     value={eventData.bookingStart}
+                    min={minDateTime}
+                    max={eventData.eventDateTime || undefined}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Booking End
-                  </label>
+                  <div className="mb-2 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Booking End Date & Time
+                    </label>
+
+                    <div className="group relative">
+                      <FiInfo className="cursor-help text-gray-400" />
+
+                      <div className="absolute left-5 top-0 z-10 hidden w-72 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+                        Ticket sales will automatically stop at this date and time. It must be before the event starts.
+                      </div>
+                    </div>
+                  </div>
+
                   <input
                     type="datetime-local"
                     name="bookingEnd"
                     value={eventData.bookingEnd}
+                    min={eventData.bookingStart || minDateTime}
+                    max={eventData.eventDateTime || undefined}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
                   />
                 </div>
-
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-300">
                     Expected Capacity
                   </label>
+
                   <input
                     type="number"
                     name="capacity"
@@ -344,12 +371,15 @@ export default function EditEvent() {
                   />
                 </div>
 
+                {/* Emoji */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Event Poster URL
+                    Event Poster
                   </label>
+
                   <input
                     type="url"
+                    placeholder="Paste event poster URL"
                     value={eventData.image}
                     onChange={(e) =>
                       setEventData({
@@ -366,11 +396,13 @@ export default function EditEvent() {
 
           <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Ticket Types</h2>
+              <h2 className="text-2xl font-bold text-white">
+                Ticket Types
+              </h2>
+
               <button
                 onClick={addTicketType}
-                className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white"
-              >
+                className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90">
                 + Add
               </button>
             </div>
@@ -382,64 +414,72 @@ export default function EditEvent() {
                   className="rounded-xl border border-white/10 bg-[var(--bg3)] p-4"
                 >
                   <div className="grid gap-4 md:grid-cols-3">
-                    <input
-                      type="text"
-                      placeholder="Ticket Name"
-                      value={ticket.name}
-                      onChange={(e) =>
-                        updateTicket(ticket.id, "name", e.target.value)
-                      }
-                      className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
-                    />
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-300">
+                        Ticket Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. VIP Pass"
+                        value={ticket.name}
+                        onChange={(e) =>
+                          updateTicket(ticket.id, "name", e.target.value)
+                        }
+                        className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
+                      />
+                    </div>
 
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={ticket.price}
-                      onChange={(e) =>
-                        updateTicket(
-                          ticket.id,
-                          "price",
-                          Number(e.target.value)
-                        )
-                      }
-                      className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
-                    />
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-300">
+                        Price (₹)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Enter price"
+                        value={ticket.price === 0 ? "" : ticket.price}
+                        onChange={(e) =>
+                          updateTicket(ticket.id, "price", Number(e.target.value))
+                        }
+                        className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
+                      />
+                    </div>
 
-                    <input
-                      type="number"
-                      placeholder="Capacity"
-                      value={ticket.capacity}
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-300">
+                        Capacity
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Available seats"
+                        value={ticket.capacity === 0 ? "" : ticket.capacity}
+                        onChange={(e) =>
+                          updateTicket(ticket.id, "capacity", Number(e.target.value))
+                        }
+                        className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                      Description
+                    </label>
+                    <textarea
+                      placeholder="e.g. VIP lounge access, early entry"
+                      value={ticket.description}
                       onChange={(e) =>
-                        updateTicket(
-                          ticket.id,
-                          "capacity",
-                          Number(e.target.value)
-                        )
+                        updateTicket(ticket.id, "description", e.target.value)
                       }
-                      className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
+                      className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
+                      rows={2}
                     />
                   </div>
 
-                  <textarea
-                    placeholder="Ticket description (e.g. VIP lounge access, early entry)"
-                    value={ticket.description}
-                    onChange={(e) =>
-                      updateTicket(
-                        ticket.id,
-                        "description",
-                        e.target.value
-                      )
-                    }
-                    className="mt-3 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                    rows={2}
-                  />
-
                   <button
                     onClick={() => removeTicket(ticket.id)}
-                    className="mt-3 rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-400"
+                    className="mt-3 rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-400 transition-all hover:bg-red-500/30"
                   >
-                    Remove
+                    Remove Ticket
                   </button>
                 </div>
               ))}

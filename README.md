@@ -1,209 +1,267 @@
 # MeetSphere
 
-MeetSphere is a full-stack event management and ticketing platform. It supports event creation, admin approval, public event browsing, ticket booking, Razorpay payments, attendee tracking, event schedules, role-based access, and user profile management.
+MeetSphere is a full-stack event management and ticketing platform that enables organizations and communities to create, manage, approve, and host events while providing users with a seamless ticket booking experience.
+
+The platform includes event approval workflows, ticket inventory management, attendee tracking, schedule management, analytics, role-based access control, and Razorpay payment integration.
+
+---
+
+## Demo Credentials
+
+### Admin Account
+
+Email: [admin@meetsphere.com]
+Password: Admin
+
+### User Account
+
+Email: [user@meetsphere.com]
+Password: user
+
+
+## Live Demo
+
+Frontend: https://meetsphereevent.netlify.app/
+
+## Features
+
+### Authentication & Authorization
+
+* User registration and login
+* JWT-based authentication
+* Protected routes
+* Role-based access control
+* User profile management
+
+### Event Management
+
+* Create and edit events
+* Save events as drafts
+* Event approval workflow
+* Event publishing and status management
+* Event deletion and updates
+* Public browsing of approved events
+
+### Ticket Management
+
+* Multiple ticket types per event
+* Ticket pricing and capacity management
+* Ticket inventory tracking
+* Ticket booking and cancellation
+* Sold count tracking
+* Free and paid ticket support
+
+### Payment Integration
+
+* Razorpay order creation
+* Secure payment verification
+* Automatic ticket generation after payment success
+* Free-ticket booking without payment gateway
+
+### Attendee Management
+
+* Real attendee tracking from bookings
+* Attendance status updates
+* Booked attendee management
+* Event attendance monitoring
+
+### Schedule Management
+
+* Event schedules
+* Session management
+* User schedule tracking
+* Event timeline organization
+
+### Admin Features
+
+* Event approvals and rejections
+* User role management
+* Booking management
+* Revenue tracking
+* Analytics dashboard
+
+---
 
 ## Tech Stack
 
-**Frontend**
-- React 19
-- TypeScript
-- Vite
-- Redux Toolkit
-- React Router
-- Tailwind CSS
-- Chart.js
-- Axios
+### Frontend
 
-**Backend**
-- Node.js
-- Express
-- MongoDB
-- Mongoose
-- JWT authentication
-- Razorpay payments
+* React 19
+* TypeScript
+* Vite
+* Redux Toolkit
+* React Router
+* Tailwind CSS
+* Chart.js
+* Axios
 
-## Main Features
+### Backend
 
-- User registration and login with JWT authentication
-- Role-based access for `User`, `Admin`, and `SuperAdmin`
-- Event creation with draft and approval workflow
-- Admin event approval, rejection, update, and delete actions
-- Public browsing for approved live events
-- Ticket type management with price, capacity, sold count, and description support
-- Ticket booking and cancellation
-- Razorpay order creation and payment verification
-- Attendee management from real booked tickets
-- Attendance states: `Booked`, `Attended`, and `Not Arrived`
-- Admin dashboard with approvals, user roles, bookings, and revenue data
-- Event schedules for live events
-- User schedule and profile details pages
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JWT Authentication
+* Razorpay Payments
+
+---
+
+## Key Highlights
+
+* Full-stack MERN architecture
+* JWT authentication and authorization
+* Role-based access control
+* Razorpay payment integration
+* Event approval workflow
+* Ticket inventory management
+* Real attendee tracking
+* Schedule management
+* Analytics dashboard
+* Responsive user interface
+
+---
 
 ## Project Structure
 
 ```text
 MeetSphere/
-  frontend/       React + TypeScript client
-  server/         Express + MongoDB API
+│
+├── frontend/          React + TypeScript Client
+│
+└── server/            Node.js + Express API
 ```
+
+---
 
 ## Frontend Routes
 
 ```text
-/login                Login
-/register             Register
-/                     Admin dashboard
-/events               Browse approved events
-/buyTickets           Buy tickets
-/myTickets            User tickets
-/my-schedule          User schedule
-/user-details         Manage user profile
-/create               Create event
-/schedule             Manage event schedules
-/attendees            Manage attendees
-/admin                Admin panel
-/analytics            Analytics
-/events/:id/edit      Edit event
+/login                 Login
+/register              Register
+/                       Dashboard
+/events                Browse Events
+/buyTickets            Buy Tickets
+/myTickets             User Tickets
+/my-schedule           User Schedule
+/user-details          User Profile
+/create                Create Event
+/schedule              Manage Schedule
+/attendees             Manage Attendees
+/admin                 Admin Panel
+/analytics             Analytics
+/events/:id/edit       Edit Event
 ```
 
-Admin-only routes are protected with role-based routing.
+Protected routes are secured using role-based authorization.
+
+---
 
 ## Backend API Overview
 
-### Auth
+Authentication
 
-```text
 POST   /api/auth/register
 POST   /api/auth/login
 GET    /api/auth/me
 PUT    /api/auth/me
 GET    /api/auth/users
 PATCH  /api/auth/users/:id/role
-```
-
-### Events
-
-```text
+Events
 POST   /api/events/create
 GET    /api/events
-PATCH  /api/events/:id/status
 PUT    /api/events/:id
+PATCH  /api/events/:id/status
 DELETE /api/events/:id
-```
-
-### Tickets
-
-```text
+Tickets
 POST   /api/tickets/purchase
 GET    /api/tickets/admin/all
-PATCH  /api/tickets/attendance/:id
 GET    /api/tickets/:userId
+PATCH  /api/tickets/attendance/:id
 DELETE /api/tickets/:id
-```
-
-### Schedules
-
-```text
+Schedules
 GET    /api/schedules
 GET    /api/schedules/event/:eventId
 POST   /api/schedules
 POST   /api/schedules/event/:eventId/sessions
-```
-
-### Payments
-
-```text
+Payments
 POST   /api/payments/create-order
 POST   /api/payments/verify
-```
 
-## Environment Variables
+----
 
-Create `server/.env`:
-
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-```
-
-Create `frontend/.env`:
-
-```env
-VITE_API_BASE_URL=http://localhost:5000/api
-VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
-```
-
-Do not commit real `.env` values.
-
-## Getting Started
-
-Install backend dependencies:
+### Backend Setup
 
 ```bash
 cd server
+
 npm install
-```
 
-Install frontend dependencies:
-
-```bash
-cd ../frontend
-npm install
-```
-
-Run the backend:
-
-```bash
-cd server
 npm run dev
 ```
 
-Run the frontend:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Default local URLs:
+Backend runs on:
 
 ```text
-Frontend: http://localhost:5173
-Backend:  http://localhost:5000
+http://localhost:5000
 ```
+
+### Frontend Setup
+
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+Frontend runs on:
+
+```text
+http://localhost:5173
+```
+
+---
 
 ## Available Scripts
 
-Frontend:
+### Frontend
 
 ```bash
 npm run dev
 npm run build
-npm run lint
 npm run preview
+npm run lint
 ```
 
-Backend:
+### Backend
 
 ```bash
 npm run dev
 npm start
 ```
 
-## Event Workflow
+---
 
-1. Admin creates an event.
-2. Publishing sends the event to `Pending`.
-3. SuperAdmin/Admin approves the event.
-4. Approved events become `Open` and appear on browse, booking, and schedule pages.
-5. Users book tickets.
-6. Admin tracks attendance from booked tickets.
+## Security Features
 
-## Notes
+* JWT-based authentication
+* Protected API routes
+* Role-based authorization
+* Payment signature verification
+* Secure password storage
+* Request validation
 
-- Ticket availability is controlled by each ticket type capacity and sold count.
-- Paid bookings use Razorpay order creation and verification.
-- Free tickets skip Razorpay and are issued directly.
-- Admin and SuperAdmin users can manage approvals, roles, attendance, and event lifecycle actions.
+---
+
+## Future Improvements
+
+* QR code ticket validation
+* Email notifications
+* Event reminders
+* Refund management
+* Advanced analytics
+* Multi-organizer support
+* Real-time attendee check-in
+* Export reports and invoices
+
+---

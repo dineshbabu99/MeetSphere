@@ -3,7 +3,7 @@ import {
   useMemo,
   useState,
 } from "react";
-
+import { FiInfo } from "react-icons/fi";
 import {
   useAppDispatch,
   useAppSelector,
@@ -528,92 +528,224 @@ export default function Schedule() {
               Add Session
             </h2>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              />
+         <div className="grid gap-4 lg:grid-cols-2">
 
-              <select
-                name="tag"
-                value={formData.tag}
-                onChange={handleChange}
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none disabled:opacity-50"
-              >
-                <option>Session</option>
-                <option>Keynote</option>
-                <option>Workshop</option>
-                <option>Panel</option>
-                <option>Networking</option>
-                <option>Closing</option>
-              </select>
+<div>
+  <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      Session Date
+    </label>
 
-              <input
-                type="time"
-                name="startTime"
-                value={formData.startTime}
-                onChange={handleChange}
-                required
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              />
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
 
-              <input
-                type="time"
-                name="endTime"
-                value={formData.endTime}
-                onChange={handleChange}
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              />
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+        Select the date on which this session will take place.
+      </div>
+    </div>
+  </div>
 
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Session title"
-                required
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50 lg:col-span-2"
-              />
+  <input
+    type="date"
+    name="date"
+    value={formData.date}
+    onChange={handleChange}
+    required
+    disabled={!selectedEvent}
+    className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+  />
+</div>
 
-              <input
-                type="text"
-                name="speaker"
-                value={formData.speaker}
-                onChange={handleChange}
-                placeholder="Speaker"
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              />
+  <div>
 
-              <input
-                type="text"
-                name="venue"
-                value={formData.venue}
-                onChange={handleChange}
-                placeholder="Venue"
-                disabled={!selectedEvent}
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              />
+ <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+     Session Type
+    </label>
 
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Description"
-                disabled={!selectedEvent}
-                className="min-h-24 rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none focus:border-[var(--accent)] disabled:opacity-50 lg:col-span-2"
-              />
-            </div>
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
 
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+           Categorize the session for attendees.
+      </div>
+    </div>
+  </div>
+
+    <select
+      name="tag"
+      value={formData.tag}
+      onChange={handleChange}
+      disabled={!selectedEvent}
+      className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    >
+      <option>Session</option>
+      <option>Keynote</option>
+      <option>Workshop</option>
+      <option>Panel</option>
+      <option>Networking</option>
+      <option>Closing</option>
+    </select>
+  </div>
+
+  <div>
+   <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      Start Time
+    </label>
+
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
+
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+       Time when the session begins.
+      </div>
+    </div>
+  </div>
+
+
+    <input
+      type="time"
+      name="startTime"
+      value={formData.startTime}
+      onChange={handleChange}
+      required
+      disabled={!selectedEvent}
+      className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    />
+  </div>
+
+  <div>
+   <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      End Time
+    </label>
+
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
+
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+        Time when the session ends.
+      </div>
+    </div>
+  </div>
+
+    <input
+      type="time"
+      name="endTime"
+      value={formData.endTime}
+      onChange={handleChange}
+      disabled={!selectedEvent}
+      className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    />
+  </div>
+
+  <div className="lg:col-span-2">
+   <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      Session Title
+    </label>
+
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
+
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+       A clear title attendees will see in the schedule.
+      </div>
+    </div>
+  </div>
+
+    <input
+      type="text"
+      name="title"
+      value={formData.title}
+      onChange={handleChange}
+      placeholder="e.g. Future of AI"
+      required
+      disabled={!selectedEvent}
+      className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    />
+  </div>
+
+  <div>
+   <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      Speaker
+    </label>
+
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
+
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+        Enter the name of the speaker for this session.
+      </div>
+    </div>
+  </div>
+
+    <input
+      type="text"
+      name="speaker"
+      value={formData.speaker}
+      onChange={handleChange}
+      placeholder="Speaker name"
+      disabled={!selectedEvent}
+      className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    />
+  </div>
+
+  <div>
+   <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      Venue
+    </label>
+
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
+
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+        Enter the location where this session will take place.
+      </div>
+    </div>
+  </div>
+
+    <input
+      type="text"
+      name="venue"
+      value={formData.venue}
+      onChange={handleChange}
+      placeholder="Hall A, Main Stage, etc."
+      disabled={!selectedEvent}
+      className="w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    />
+  </div>
+
+
+  <div className="lg:col-span-2">
+ <div className="mb-2 flex items-center gap-2">
+    <label className="text-sm font-medium text-gray-300">
+      Description
+    </label>
+
+    <div className="group relative">
+      <FiInfo className="cursor-help text-gray-400" />
+
+      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+        Provide a brief overview of what this session will cover.
+      </div>
+    </div>
+  </div>
+
+    <textarea
+      name="description"
+      value={formData.description}
+      onChange={handleChange}
+      placeholder="Describe the session..."
+      disabled={!selectedEvent}
+      className="min-h-24 w-full rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-3 text-white outline-none"
+    />
+  </div>
+
+</div>
             <button
               type="submit"
               disabled={
