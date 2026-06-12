@@ -685,9 +685,10 @@ if (totalCapacity > Number(eventData.capacity)) {
                 >
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-300">
-                        Ticket Name
-                      </label>
+                    <label className="text-sm font-medium text-gray-300">
+                      Ticket Name
+                    </label>
+
                       <input
                         type="text"
                         placeholder="e.g. VIP Pass"
@@ -700,9 +701,19 @@ if (totalCapacity > Number(eventData.capacity)) {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-300">
-                        Price (₹)
-                      </label>
+                          <div className="mb-2 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Price (₹)
+                    </label>
+
+                    <div className="group relative">
+                      <FiInfo className="cursor-help text-gray-400" />
+
+                      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+                        Set the price for this ticket type. Use 0 for free tickets.
+                      </div>
+                    </div>
+                  </div>
                       <input
                         type="number"
                         placeholder="Enter price"
@@ -714,9 +725,19 @@ if (totalCapacity > Number(eventData.capacity)) {
                       />
                     </div>
 <div>
-  <label className="mb-2 block text-sm font-medium text-gray-300">
-    Capacity
-  </label>
+        <div className="mb-2 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Capacity
+                    </label>
+
+                    <div className="group relative">
+                      <FiInfo className="cursor-help text-gray-400" />
+
+                      <div className="absolute left-5 top-0 z-10 hidden w-64 rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg group-hover:block">
+                        Set the number of tickets available for this type. The total capacity across all ticket types cannot exceed the expected event capacity.
+                      </div>
+                    </div>
+                  </div>
 
   <input
     type="number"
