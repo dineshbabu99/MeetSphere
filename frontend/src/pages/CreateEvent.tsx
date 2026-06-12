@@ -117,11 +117,18 @@ export default function CreateEvent() {
   };
 
 
+const totalTicketCapacity = tickets.reduce(
+  (sum, ticket) => sum + (ticket.capacity || 0),
+  0
+);
 
+const eventCapacity = Number(eventData.capacity || 0);
 
+const remainingCapacity =
+  eventCapacity - totalTicketCapacity;
 
-
-
+const capacityExceeded =
+  totalTicketCapacity > eventCapacity;
 
   const handleChange = (
     e:
@@ -146,6 +153,19 @@ export default function CreateEvent() {
 
         return;
       }
+
+const totalCapacity = tickets.reduce(
+  (sum, ticket) => sum + ticket.capacity,
+  0
+);
+
+if (totalCapacity > Number(eventData.capacity)) {
+  alert(
+    "Total ticket capacity cannot exceed expected event capacity"
+  );
+  return;
+}
+
 
       const result =
         await dispatch(
@@ -394,7 +414,20 @@ export default function CreateEvent() {
       return;
     }
 
+        const totalCapacity = tickets.reduce(
+  (sum, ticket) => sum + ticket.capacity,
+  0
+);
+
+if (totalCapacity > Number(eventData.capacity)) {
+  alert(
+    "Total ticket capacity cannot exceed expected event capacity"
+  );
+  return;
+}
+
     const result = await dispatch(
+      
       updateEvent({
         eventId: editingEventId,
         eventData: {
@@ -413,6 +446,7 @@ export default function CreateEvent() {
         },
       })
     );
+    
 
     if (updateEvent.fulfilled.match(result)) {
       alert("Event updated successfully");
@@ -605,6 +639,31 @@ export default function CreateEvent() {
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-[var(--bg2)] p-6">
+          {/* <div className="mb-4 rounded-lg bg-black/20 p-3 text-sm">
+  <p className="text-gray-300">
+    Event Capacity: {eventCapacity}
+  </p>
+
+  <p className="text-gray-300">
+    Allocated Tickets: {totalTicketCapacity}
+  </p>
+
+  <p
+    className={
+      remainingCapacity >= 0
+        ? "text-green-400"
+        : "text-red-400"
+    }
+  >
+    Remaining Capacity: {remainingCapacity}
+  </p>
+
+  {capacityExceeded && (
+    <p className="mt-2 text-red-400">
+      Total ticket capacity exceeds the event capacity.
+    </p>
+  )}
+</div> */}
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">
                 Ticket Types
@@ -616,6 +675,7 @@ export default function CreateEvent() {
                 + Add
               </button>
             </div>
+
 
             <div className="space-y-4">
               {tickets.map((ticket) => (
@@ -653,21 +713,39 @@ export default function CreateEvent() {
                         className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
                       />
                     </div>
+<div>
+  <label className="mb-2 block text-sm font-medium text-gray-300">
+    Capacity
+  </label>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-300">
-                        Capacity
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="Available seats"
-                        value={ticket.capacity === 0 ? "" : ticket.capacity}
-                        onChange={(e) =>
-                          updateTicket(ticket.id, "capacity", Number(e.target.value))
-                        }
-                        className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
-                      />
-                    </div>
+  <input
+    type="number"
+    placeholder="Available seats"
+    value={ticket.capacity === 0 ? "" : ticket.capacity}
+    max={remainingCapacity + ticket.capacity}
+    onChange={(e) => {
+      const newCapacity = Number(e.target.value);
+
+      const otherTicketsCapacity = tickets.reduce(
+        (sum, t) =>
+          t.id === ticket.id
+            ? sum
+            : sum + (t.capacity || 0),
+        0
+      );
+
+      const maxAllowed =
+        eventCapacity - otherTicketsCapacity;
+
+      updateTicket(
+        ticket.id,
+        "capacity",
+        Math.min(newCapacity, maxAllowed)
+      );
+    }}
+    className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none"
+  />
+</div>
                   </div>
 
                   <div className="mt-4">
@@ -757,6 +835,7 @@ export default function CreateEvent() {
 
             <div className="mt-5 space-y-3">
               <button
+                disabled={capacityExceeded}
                 onClick={
                   editingEventId
                     ? saveChanges
