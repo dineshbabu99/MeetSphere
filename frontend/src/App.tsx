@@ -13,6 +13,10 @@ import BuyTickets from "./pages/BuyTickets";
 import MyTickets from "./pages/MyTickets";
 import AttendeeManagement from "./pages/Attendees";
 import AdminDashboard from "./pages/Admin";
+import AdminApprovals from "./pages/AdminApprovals";
+import AdminEvents from "./pages/AdminEvents";
+import AdminUsers from "./pages/AdminUsers";
+import AdminBookings from "./pages/AdminBookings";
 import Analytics from "./pages/Analytics";
 import EditEvent from "./pages/EditEvent";
 import UserDetails from "./pages/UserDetails";
@@ -36,8 +40,11 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/"element={<Dashboard />}/>
-            <Route path="/events" element={<Events />}/>
             <Route path="/user-details" element={<UserDetails />} />
+
+            <Route element={ <RoleProtectedRoute allowedRoles={["User", "Event Organizer"]}/>}>
+              <Route path="/events" element={<Events />}/>
+            </Route>
 
             <Route element={ <RoleProtectedRoute allowedRoles={["User"]}/>}>
               <Route path="/buyTickets" element={<BuyTickets />}/>
@@ -55,6 +62,10 @@ function App() {
 
             <Route element={ <RoleProtectedRoute allowedRoles={["Admin"]}/>}>
               <Route path="/admin" element={ <AdminDashboard />}/>
+              <Route path="/admin/approvals" element={<AdminApprovals />}/>
+              <Route path="/admin/events" element={<AdminEvents />}/>
+              <Route path="/admin/users" element={<AdminUsers />}/>
+              <Route path="/admin/bookings" element={<AdminBookings />}/>
             </Route>
           </Route>
         </Route>

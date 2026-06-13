@@ -1,49 +1,30 @@
-const adminRoles = [
-  "Admin",
-];
-
-const organizerRoles = [
-  "Admin",
-  "Event Organizer",
-];
-
-const allRoles = [
-  "Admin",
-  "Event Organizer",
-  "User",
-];
-
-const userRoles = [
-  "User",
-];
+const adminRoles = ["Admin"];
+const organizerRoles = ["Admin", "Event Organizer"];
+const allRoles = ["Admin", "Event Organizer", "User"];
+const userRoles = ["User"];
+const browseRoles = ["Event Organizer", "User"];
 
 export const menuSections = [
   {
     title: "Overview",
     items: [
-      {
-        name: "Dashboard",
-        path: "/",
-         icon: "📊",
-        roles: allRoles,
-      },
+      { name: "Dashboard", path: "/", icon: "📊", roles: allRoles },
       {
         name: "Analytics",
         path: "/analytics",
-         icon: "📈",
+        icon: "📈",
         roles: organizerRoles,
       },
     ],
   },
-
   {
     title: "Events",
     items: [
       {
         name: "Browse Events",
         path: "/events",
-         icon: "🎭",
-        roles: allRoles,
+        icon: "🎉",
+        roles: browseRoles,
       },
       {
         name: "Create Event",
@@ -54,32 +35,30 @@ export const menuSections = [
       {
         name: "Manage Schedules",
         path: "/schedule",
-        icon: "📋",
+        icon: "📅",
         roles: organizerRoles,
       },
     ],
   },
-
   {
     title: "Commerce",
     items: [
       {
         name: "Buy Tickets",
         path: "/buyTickets",
-          icon: "🎟️",
-        badge: "3",
+        icon: "🎟️",
         roles: userRoles,
       },
       {
         name: "My Tickets",
         path: "/myTickets",
-        icon: "🪪",
+        icon: "🎫",
         roles: userRoles,
       },
       {
         name: "My Schedule",
         path: "/my-schedule",
-        icon: "🗓️",
+        icon: "📅",
         roles: userRoles,
       },
       {
@@ -90,26 +69,48 @@ export const menuSections = [
       },
     ],
   },
-
   {
     title: "Account",
     items: [
       {
         name: "User Details",
         path: "/user-details",
-       icon: "⚙️",
+        icon: "👤",
         roles: allRoles,
       },
     ],
   },
-
   {
     title: "Admin",
     items: [
+      // {
+      //   name: "Admin Overview",
+      //   path: "/admin",
+      //   icon: "⚙️",
+      //   roles: adminRoles,
+      // },
       {
-        name: "Admin Panel",
-        path: "/admin",
-        icon: "⚙️",
+        name: "Event Approvals",
+        path: "/admin/approvals",
+        icon: "✅",
+        roles: adminRoles,
+      },
+      {
+        name: "Manage Events",
+        path: "/admin/events",
+        icon: "📅",
+        roles: adminRoles,
+      },
+      {
+        name: "Manage Users",
+        path: "/admin/users",
+        icon: "👤",
+        roles: adminRoles,
+      },
+      {
+        name: "Manage Bookings",
+        path: "/admin/bookings",
+        icon: "🎫",
         roles: adminRoles,
       },
     ],

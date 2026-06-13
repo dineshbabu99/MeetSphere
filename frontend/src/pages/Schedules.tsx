@@ -4,6 +4,7 @@ import {
   useState,
 } from "react";
 import { FiInfo } from "react-icons/fi";
+import { useSearchParams } from "react-router-dom";
 import {
   useAppDispatch,
   useAppSelector,
@@ -80,6 +81,10 @@ const getEventId = (
 export default function Schedule() {
   const dispatch =
     useAppDispatch();
+  const [searchParams] =
+    useSearchParams();
+  const eventFromUrl =
+    searchParams.get("eventId") || "";
 
   const {
     events,
@@ -179,6 +184,21 @@ export default function Schedule() {
       return;
     }
 
+    if (
+      eventFromUrl &&
+      liveEvents.some(
+        (event) =>
+          event._id === eventFromUrl
+      )
+    ) {
+
+      setSelectedEventId(
+        eventFromUrl
+      );
+
+      return;
+    }
+
     const selectedEventExists =
       liveEvents.some(
         (event) =>
@@ -198,6 +218,7 @@ export default function Schedule() {
   }, [
     liveEvents,
     selectedEventId,
+    eventFromUrl,
   ]);
 
   const selectedEvent =
@@ -243,6 +264,28 @@ export default function Schedule() {
         total + day.sessions.length,
       0
     );
+
+  const speakerCount =
+    new Set(
+      scheduleDays.flatMap((day) =>
+        day.sessions
+          .map((session) =>
+            session.speaker?.trim()
+          )
+          .filter(Boolean)
+      )
+    ).size;
+
+  const scheduledVenues =
+    new Set(
+      scheduleDays.flatMap((day) =>
+        day.sessions
+          .map((session) =>
+            session.venue?.trim()
+          )
+          .filter(Boolean)
+      )
+    ).size;
 
   const handleChange = (
     event:
@@ -428,21 +471,47 @@ export default function Schedule() {
                 )}
               </div>
 
-              <button
-                type="button"
-                disabled={
-                  !selectedEvent ||
-                  sessionCount === 0
-                }
-                className="rounded-xl border border-white/10 bg-[var(--bg3)] px-4 py-2 text-sm text-gray-300 transition-all hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Notify Attendees
-              </button>
             </div>
 
             {error && (
               <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                 {error}
+              </div>
+            )}
+
+            {selectedEvent && (
+              <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg3)] p-4">
+                  <p className="text-xs uppercase text-gray-500">Event date</p>
+                  <p className="mt-2 font-semibold text-white">
+                    {new Date(selectedEvent.eventDateTime).toLocaleString()}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[var(--bg3)] p-4">
+                  <p className="text-xs uppercase text-gray-500">Booking window</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    {formatEventDate(selectedEvent.bookingStart)} -{" "}
+                    {formatEventDate(selectedEvent.bookingEnd)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[var(--bg3)] p-4">
+                  <p className="text-xs uppercase text-gray-500">Ticket sales</p>
+                  <p className="mt-2 font-semibold text-white">
+                    {selectedEvent.sold || 0} / {selectedEvent.capacity || 0}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {selectedEvent.tickets.length} ticket types
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[var(--bg3)] p-4">
+                  <p className="text-xs uppercase text-gray-500">Schedule coverage</p>
+                  <p className="mt-2 font-semibold text-white">
+                    {scheduleDays.length} days · {sessionCount} sessions
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {speakerCount} speakers · {scheduledVenues} venues
+                  </p>
+                </div>
               </div>
             )}
 
@@ -492,6 +561,12 @@ export default function Schedule() {
                               {session.venue && (
                                 <p className="mt-1 text-sm text-gray-500">
                                   Venue: {session.venue}
+                                </p>
+                              )}
+
+                              {session.description && (
+                                <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
+                                  {session.description}
                                 </p>
                               )}
                             </div>

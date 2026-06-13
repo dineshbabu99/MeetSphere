@@ -24,6 +24,7 @@ import {
   formatRevenue,
   ticketAmount,
 } from "../data/dashboardStats";
+import { FiBarChart2, FiCalendar, FiDollarSign, FiTag } from "react-icons/fi";
 
 ChartJS.register(
   ArcElement,
@@ -163,41 +164,83 @@ export default function Analytics() {
   );
 
   const loading = eventsLoading || ticketsLoading || usersLoading;
-
   const metrics = [
     {
-      label: "Total Revenue",
-      value: loading ? "..." : formatRevenue(totalRevenue),
-      sub: `${visibleTickets.length} bookings`,
-      color: "text-rose-400",
-      bg: "bg-rose-500/10",
+      label: "Total Events",
+      value: loading ? "..." : visibleEvents.length,
+      detail: `${visibleEvents.filter((e) => e.status === "Open").length} live events`,
+      icon: FiCalendar,
+      accent: "from-cyan-400/20 to-cyan-400/5",
+      iconStyle: "bg-cyan-400/15 text-cyan-300",
     },
     {
       label: "Tickets Sold",
       value: loading ? "..." : ticketsSold,
-      sub: "All ticket quantities",
-      color: "text-yellow-400",
-      bg: "bg-yellow-500/10",
+      detail: `${visibleTickets.length} booking records`,
+      icon: FiTag,
+      accent: "from-amber-400/20 to-amber-400/5",
+      iconStyle: "bg-amber-400/15 text-amber-300",
     },
     {
       label: "Attendance Rate",
       value: loading ? "..." : `${attendanceRate}%`,
-      sub: "Marked as attended",
-      color: "text-green-400",
-      bg: "bg-green-500/10",
+      detail: "Marked as attended",
+      icon: FiBarChart2,
+      accent: "from-emerald-400/20 to-emerald-400/5",
+      iconStyle: "bg-emerald-400/15 text-emerald-300",
     },
     {
-      label: "Active Users",
-      value: loading
-        ? "..."
-        : currentUser?.role === "Admin"
-        ? users.length
-        : new Set(visibleTickets.map((ticket) => ticket.userId)).size,
-      sub: `${visibleEvents.filter((e) => e.status === "Open").length} live events`,
-      color: "text-violet-400",
-      bg: "bg-violet-500/10",
+      label: "Total Revenue",
+      value: loading ? "..." : formatRevenue(totalRevenue),
+      detail: `${visibleTickets.length} bookings`,
+      icon: FiDollarSign,
+      accent: "from-rose-400/20 to-rose-400/5",
+      iconStyle: "bg-rose-400/15 text-rose-300",
     },
+    
   ];
+  // const metrics = [
+  //   {
+  //     label: "Total Revenue",
+  //     value: loading ? "..." : formatRevenue(totalRevenue),
+  //     sub: `${visibleTickets.length} bookings`,
+  //     icon: FiDollarSign,
+  //     accent: "text-rose-400",
+
+  //     bg: "bg-rose-500/10",
+  //          iconStyle: "bg-rose-400/15 text-rose-300",
+  //   },
+  //   {
+  //     label: "Tickets Sold",
+  //     value: loading ? "..." : ticketsSold,
+  //     sub: "All ticket quantities",
+  //     icon: FiDollarSign,
+  //     accent: "text-yellow-400",
+  //     bg: "bg-yellow-500/10",
+  //     iconStyle: "bg-yellow-400/15 text-yellow-300",
+  //   },
+  //   {
+  //     label: "Attendance Rate",
+  //     value: loading ? "..." : `${attendanceRate}%`,
+  //     sub: "Marked as attended",
+  //     icon: FiDollarSign,
+  //     accent: "text-green-400",
+  //     bg: "bg-green-500/10",
+  //     iconStyle: "bg-green-400/15 text-green-300",
+  //   },
+  //   {
+  //     label: "Active Users",
+  //     value: loading
+  //       ? "..."
+  //       : currentUser?.role === "Admin"
+  //       ? users.length
+  //       : new Set(visibleTickets.map((ticket) => ticket.userId)).size,
+  //     sub: `${visibleEvents.filter((e) => e.status === "Open").length} live events`,
+  //     accent: "text-violet-400",
+  //     bg: "bg-violet-500/10",
+  //     iconStyle: "bg-violet-400/15 text-violet-300",
+  //   },
+  // ];
 
   return (
     <div>
@@ -207,7 +250,7 @@ export default function Analytics() {
           Revenue, ticket sales, attendance, and event performance
         </p>
       </div>
-
+{/* 
       <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
           <div
@@ -215,12 +258,39 @@ export default function Analytics() {
             className={`rounded-2xl border border-white/10 p-6 ${metric.bg}`}
           >
             <p className="text-sm text-gray-400">{metric.label}</p>
-            <h2 className={`mt-3 text-3xl font-bold ${metric.color}`}>
+            <h2 className={`mt-3 text-3xl font-bold ${metric.accent}`}>
               {metric.value}
             </h2>
             <p className="mt-2 text-sm text-gray-300">{metric.sub}</p>
           </div>
         ))}
+      </div> */}
+      
+      <div className="mb-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
+          return (
+            <div
+              key={metric.label}
+              className={`rounded-lg border border-white/10 bg-gradient-to-br ${metric.accent} p-5`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">
+                    {metric.label}
+                  </p>
+                  <p className="mt-3 text-3xl font-bold text-white">
+                    {loading ? "..." : metric.value}
+                  </p>
+                </div>
+                <span className={`rounded-lg p-3 ${metric.iconStyle}`}>
+                  <Icon size={20} />
+                </span>
+              </div>
+              <p className="mt-4 text-xs text-gray-400">{metric.detail}</p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
