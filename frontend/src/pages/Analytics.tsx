@@ -76,7 +76,7 @@ export default function Analytics() {
   const { events, loading: eventsLoading } = useAppSelector(
     (state) => state.events
   );
-  const { users, loading: usersLoading } = useAppSelector(
+  const { loading: usersLoading } = useAppSelector(
     (state) => state.auth
   );
   const { tickets, loading: ticketsLoading } = useAppSelector(
